@@ -1,0 +1,15 @@
+.swal2-title {
+    font-size: 18px !important;
+    color: #2c3e50;
+    font-weight: bold!important;
+}
+
+.swal2-html-container p, .swal2-html-container{
+    font-size: 14px !important;
+    text-align: justify !important;
+    line-height: 21px;
+}
+
+.swal2-html-container p{
+    margin-top: 10px;
+}
