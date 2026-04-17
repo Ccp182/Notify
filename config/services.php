@@ -4,30 +4,45 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | HMSrvAuth (Core SSO)
     |--------------------------------------------------------------------------
     |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
+    | Configuracion del cliente OAuth2 contra auth.24hm.net (HMSrvAuth).
+    | Las credenciales vienen del .env para no commitear secretos.
+    |
+    | base_uri:      URL base del servidor SSO (sin slash final).
+    | client_id:     UUID del cliente OAuth generado con `passport:client`.
+    | client_secret: secret plaintext (se usa solo en body de /oauth/token).
+    | redirect:      callback publico de HMNotify que recibe el auth code.
     |
     */
 
-    'mailgun' => [
-        'domain' => env('MAILGUN_DOMAIN'),
-        'secret' => env('MAILGUN_SECRET'),
-        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+    'core_sso' => [
+        'base_uri'      => env('CORE_SSO_BASE_URI', 'https://auth.24hm.net'),
+        'client_id'     => env('CORE_SSO_CLIENT_ID'),
+        'client_secret' => env('CORE_SSO_CLIENT_SECRET'),
+        'redirect'      => env('CORE_SSO_REDIRECT_URI'),
     ],
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'resend' => [
+        'key' => env('RESEND_KEY'),
+    ],
+
     'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
+        'key'    => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel'              => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
     ],
 
 ];
