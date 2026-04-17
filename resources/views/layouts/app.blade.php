@@ -16,15 +16,36 @@
 
     <style>
         :root {
-            --bs-primary:     {{ $appColor }};
-            --bs-primary-rgb: {{ hex2rgbStr($appColor) }};
+            --bs-primary:               {{ $appColor }};
+            --bs-primary-rgb:           {{ hex2rgbStr($appColor) }};
+            --bs-link-color:            {{ $appColor }};
+            --bs-link-hover-color:      {{ $appColor }};
+            --bs-nav-pills-link-active-bg: {{ $appColor }};
         }
         body[data-sidebar=dark] .navbar-brand-box { background: {{ $appColor }} !important; }
-        .btn-primary { background-color: {{ $appColor }}; border-color: {{ $appColor }}; }
-        .btn-primary:hover, .btn-primary:focus, .btn-primary:active { background-color: {{ $appColor }}; filter: brightness(0.9); }
-        .text-primary { color: {{ $appColor }} !important; }
-        .bg-primary   { background-color: {{ $appColor }} !important; }
-        a { color: {{ $appColor }}; }
+        .btn-primary,
+        .btn-primary:active,
+        .btn-primary:focus,
+        .btn-primary:hover  { background-color: {{ $appColor }} !important; border-color: {{ $appColor }} !important; }
+        .btn-primary:hover  { filter: brightness(0.92); }
+        .text-primary       { color: {{ $appColor }} !important; }
+        .bg-primary         { background-color: {{ $appColor }} !important; }
+        .nav-pills .nav-link.active,
+        .nav-pills .show > .nav-link {
+            background-color: {{ $appColor }} !important;
+            color: #fff !important;
+        }
+        .bg-primary-subtle  { background-color: rgba({{ hex2rgbStr($appColor) }}, 0.18) !important; }
+        .text-bg-primary    { background-color: {{ $appColor }} !important; color: #fff !important; }
+        .border-primary     { border-color: {{ $appColor }} !important; }
+        a                   { color: {{ $appColor }}; }
+        a:hover             { color: {{ $appColor }}; filter: brightness(0.85); }
+        /* Twitter BS wizard: circulos de paso */
+        .twitter-bs-wizard .twitter-bs-wizard-nav .nav-link.active .step-number,
+        .twitter-bs-wizard .twitter-bs-wizard-nav .nav-link.done .step-number {
+            background-color: {{ $appColor }} !important;
+            color: #fff !important;
+        }
     </style>
 </head>
 
