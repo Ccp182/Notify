@@ -402,8 +402,8 @@ $(document).ready(function() {
             reader.readAsDataURL(input.files[0]); // Leer la imagen como DataURL
         } else {
             $(".android_noti .img_noti, .ios_noti .img_noti").addClass("d-none");
-            $(".android_noti .img_noti img, .ios_noti .img_noti img").attr("src", "{{ URL::asset('assets/images/Image-not-found.png') }}");
-            $(".modal1 img.img_noti, .modal2 img.img_noti, .modal3 img.img_noti, .modal4 img.img_noti, .modal5 img.img_noti").attr("src", "{{ URL::asset('assets/images/Image-not-found.png') }}");
+            $(".android_noti .img_noti img, .ios_noti .img_noti img").attr("src", "/assets/images/Image-not-found.png");
+            $(".modal1 img.img_noti, .modal2 img.img_noti, .modal3 img.img_noti, .modal4 img.img_noti, .modal5 img.img_noti").attr("src", "/assets/images/Image-not-found.png");
         }
     });
 
