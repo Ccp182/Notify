@@ -81,16 +81,69 @@ class MessageController extends Controller
     public function getDispositivosAlt(Request $request): JsonResponse
     {
         $appLocal = Session::get('AppNotify.idLocal');
+        $template = strtoupper((string) $request->input('template', 'NORMAL'));
 
-        $response = $this->api->post('Notify/getDispoUserByApp', [
-            'app'            => $appLocal,
-            'idTipoEnt'      => $request->input('idTipoEnt', '0'),
-            'idSubGrupo'     => $request->input('idSubGrupo', '0'),
-            'filtroTipoUser' => (int) $request->input('filtroTipoUser', 3),
-            'plataforma'     => $request->input('plataforma'),
-        ]);
+        if ($template === 'TEMPLATE') {
+            if ($request->filled('numList')) {
+                $response = $this->api->post('Notify/getDispoByNumero', [
+                    'numList'      => $request->input('numList'),
+                    'idAplicacion' => (string) $appLocal,
+                ]);
+            } else {
+                $response = $this->api->post('Notify/getDispoByMotorChasis', [
+                    'chasisList'   => $request->input('chasisList', ''),
+                    'motorList'    => $request->input('motorList', ''),
+                    'idAplicacion' => (string) $appLocal,
+                ]);
+            }
+        } else {
+            $idTipoEnt  = $request->input('idTipoEnt');
+            $idSubGrupo = $request->input('idSubGrupo');
+            $plat       = $request->input('plat', $request->input('plataforma'));
 
-        return response()->json($response ?? ['Error' => true, 'Mensaje' => 'No se pudo filtrar dispositivos.']);
+            $response = $this->api->post('Notify/getDispoUserByApp', [
+                'app'            => $appLocal,
+                'idTipoEnt'      => is_array($idTipoEnt)  ? implode(',', $idTipoEnt)  : $idTipoEnt,
+                'idSubGrupo'     => is_array($idSubGrupo) ? implode(',', $idSubGrupo) : $idSubGrupo,
+                'filtroTipoUser' => (int) $request->input('filtroTipoUser', 3),
+                'plataforma'     => ($plat === 'TODOS' ? null : $plat),
+            ]);
+        }
+
+        return response()->json($this->mapDispositivosToDatatable($response, $appLocal));
+    }
+
+    /**
+     * Convierte la respuesta cruda de HMSrvAuth (clave "Devices" o similar) al
+     * contrato que espera el DataTable del wizard (clave "data" con columnas
+     * Check/App/DId/Name/NameExt/NGroup/Min/Plat/MDisp/Tipo).
+     */
+    private function mapDispositivosToDatatable(?array $response, $appLocal): array
+    {
+        $devices = $response['Devices']
+            ?? $response['devices']
+            ?? $response['data']
+            ?? [];
+
+        $out = ['data' => []];
+        foreach ($devices as $i => $item) {
+            $name  = $item['User']     ?? $item['Name']  ?? '--';
+            $isSub = !empty($item['USubCode']) || !empty($item['IdSubUser']) || ($item['Tipo'] ?? null) === 'SUBUSUARIO';
+
+            $out['data'][] = [
+                'Check'   => '<div class="form-check"><input type="checkbox" class="form-check-input" id="ordercheck'.$i.'"></div>',
+                'App'     => $appLocal,
+                'DId'     => $item['Vid']       ?? $item['DId']    ?? '--',
+                'Name'    => $name,
+                'NameExt' => [$name, $isSub ? 'SUBUSUARIO' : 'USUARIO'],
+                'NGroup'  => $item['GroupName'] ?? $item['NGroup'] ?? '--',
+                'Min'     => $item['Min']       ?? '--',
+                'Plat'    => $item['Platform']  ?? $item['Plat']   ?? '--',
+                'MDisp'   => $item['DevModel']  ?? $item['MDisp']  ?? '--',
+                'Tipo'    => $item['EntName']   ?? $item['Tipo']   ?? '--',
+            ];
+        }
+        return $out;
     }
 
     /**
