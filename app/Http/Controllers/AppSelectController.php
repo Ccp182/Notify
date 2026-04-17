@@ -124,11 +124,27 @@ class AppSelectController extends Controller
 
     private function setSessionApp(array $app): void
     {
-        Session::put('AppNotify', [
-            'idCore'  => $app['idCore'],
+        // Branding canonico vive en HMSrvAuth/config/apps.php (logo CDN, color,
+        // titulo, favicon, bg). Se consulta una vez en la seleccion y se cachea
+        // en sesion para que layout/wizard/preview no vuelvan a pegar al API.
+        $branding = $this->api->cachedPost('Notify/getAppBranding', [
+            'app'     => $app['idCore'],
             'idLocal' => $app['idLocal'],
-            'name'    => $app['name'],
-            'color'   => $app['color'] ?? '#556ee6',
+        ], 1800);
+
+        $isValid = is_array($branding) && empty($branding['Error']);
+
+        Session::put('AppNotify', [
+            'idCore'   => $app['idCore'],
+            'idLocal'  => $app['idLocal'],
+            'idName'   => $isValid ? ($branding['id_name'] ?? null) : null,
+            'name'     => $isValid ? ($branding['name']     ?? $app['name']) : $app['name'],
+            'title'    => $isValid ? ($branding['title']    ?? null) : null,
+            'color'    => $isValid ? ($branding['color']    ?? $app['color'] ?? '#556ee6') : ($app['color'] ?? '#556ee6'),
+            'logo'     => $isValid ? ($branding['logo']     ?? null) : null,
+            'favicon'  => $isValid ? ($branding['favicon']  ?? null) : null,
+            'bg'       => $isValid ? ($branding['bg']       ?? null) : null,
+            'img_pri'  => $isValid ? ($branding['img_pri']  ?? null) : null,
         ]);
     }
 }

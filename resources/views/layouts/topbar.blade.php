@@ -1,5 +1,6 @@
 @php
-    $appName = session('AppNotify.name', 'HMNotify');
+    $appName = session('AppNotify.name',  'HMNotify');
+    $appLogo = session('AppNotify.logo');
 @endphp
 <header id="page-topbar">
     <div class="navbar-header">
@@ -20,7 +21,11 @@
             </button>
 
             <div class="d-none d-md-flex align-items-center ms-3 text-muted">
-                <i class="ri-apps-2-line me-1"></i>
+                @if($appLogo)
+                    <img src="{{ $appLogo }}" alt="{{ $appName }}" style="height:22px;max-width:110px;object-fit:contain;" class="me-2">
+                @else
+                    <i class="ri-apps-2-line me-1"></i>
+                @endif
                 <small>{{ $appName }} &middot; {{ session('Pais', 'EC') }}</small>
             </div>
         </div>
