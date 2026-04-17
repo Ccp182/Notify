@@ -1,62 +1,49 @@
 <?php
 
-use App\Http\Controllers\LoginController;
+use App\Http\Controllers\AppSelectController;
 use App\Http\Controllers\MessageController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Session;
 
 /*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+ * HMNotify - Rutas Web
+ * -----------------------------------------------------------------------------
+ * Estructura:
+ *   - Rutas publicas: login / callback / logout.
+ *   - Rutas con SSO valido pero sin app seleccionada: /select-app (Opcion B).
+ *   - Rutas completamente protegidas: dashboard, wizard, CSV masivo, AJAX.
+ */
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/Message/'.Session::get('Pais').'/'.Session::get('AppNAME').'/create');
-    } else {
-        return redirect()->route('login');
-    }
+// Root redirect
+Route::get('/', fn() => redirect()->route('dashboard'))->name('local');
+
+// ---- Publicas (sin auth) ----
+Route::get('/login',         [SSOController::class, 'redirectToProvider'])->name('login');
+Route::get('/auth/callback', [SSOController::class, 'handleCallback'])->name('sso.callback');
+Route::post('/logout',       [SSOController::class, 'logout'])->name('logout');
+
+
+// ---- Con SSO valido (sin necesidad de app seleccionada) ----
+Route::middleware(['sso'])->group(function () {
+    Route::get('/select-app',  [AppSelectController::class, 'show'])->name('select-app.show');
+    Route::post('/select-app', [AppSelectController::class, 'select'])->name('select-app.select');
 });
 
-Route::middleware(['guest'])->group(function () {
-    Route::get('login', LoginController::class)->name('login');
-    Route::post('login', [LoginController::class, 'login'])->name('loginex');
+
+// ---- Protegidas (SSO + AppNotify en sesion) ----
+Route::middleware(['sso', 'app.select'])->group(function () {
+
+    // Dashboard y wizard
+    Route::get('/dashboard', [MessageController::class, 'dashboard'])->name('dashboard');
+    Route::get('/wizard',    [MessageController::class, 'notificationWizard2'])->name('wizard');
+
+    // Envios
+    Route::post('/wizard/send',              [MessageController::class, 'postDispositivosSendNew2'])->name('wizard.send');
+    Route::post('/wizard/template-send',     [MessageController::class, 'postDispoTemplateSendNew'])->name('wizard.template-send');
+    Route::post('/wizard/template-num-send', [MessageController::class, 'postDispoTemplateNumSendNew'])->name('wizard.template-num-send');
+
+    // AJAX proxies al SSO
+    Route::post('/api-proxy/dispositivos',     [MessageController::class, 'getDispositivos'])->name('api.dispositivos');
+    Route::post('/api-proxy/dispositivos-alt', [MessageController::class, 'getDispositivosAlt'])->name('api.dispositivos-alt');
+    Route::get('/api-proxy/catalogos',         [MessageController::class, 'getCatalogos'])->name('api.catalogos');
 });
-Route::middleware(['web'])->group(function () {
-    //Route::post('login_ext', [LoginController::class, 'loginextpost'])->name('loginextpost');
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('mapa',  [MessageController::class,'create'])->name('mapa');
-    Route::get('logout', [LoginController::class, 'logout'])->name('logout');
-    Route::post('getDispositivos', [MessageController::class, 'getDispositivos'])->name('getDispositivos');
-    Route::post('getDispositivosAlt', [MessageController::class, 'getDispositivosAlt'])->name('getDispositivosAlt');
-    Route::post('postDispositivosSend', [MessageController::class, 'postDispositivosSend'])->name('postDispositivosSend');
-    Route::post('postDispositivosSendNew', [MessageController::class, 'postDispositivosSendNew'])->name('postDispositivosSendNew');
-    Route::post('postDispoTemplateSendNew', [MessageController::class, 'postDispoTemplateSendNew'])->name('postDispoTemplateSendNew');
-    
-    Route::post('postDispositivosSendNew2', [MessageController::class, 'postDispositivosSendNew2'])->name('postDispositivosSendNew2');
-    Route::post('postDispoTemplateNumSendNew', [MessageController::class, 'postDispoTemplateNumSendNew'])->name('postDispoTemplateNumSendNew');
-
-    Route::group(['prefix' => 'Message/{country}/{app_name}', 'middleware' => 'domain'],function (){
-        Route::get('/create', [MessageController::class,'create']);
-        Route::get('/notification', [MessageController::class,'notificationWizard']);
-        Route::get('/notification2', [MessageController::class,'notificationWizard2']);
-       
-    });
-    
-});
-
-/**$router->group(['prefix' => 'Message/{country}/{app_name}', 'middleware' => 'domain'],function () use ($router) {
-    $router->get('/create', [MessageController::class,'create']);
-    
-   
-});**/
-
