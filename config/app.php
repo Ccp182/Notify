@@ -33,4 +33,6 @@ return [
         'store'  => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'primary_color' => env('NOTIFY_PRIMARY_COLOR'),
+
 ];

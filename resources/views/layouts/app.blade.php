@@ -1,5 +1,5 @@
 @php
-    $appColor = session('AppNotify.color', '#556ee6');
+    $appColor = config('app.primary_color') ?: session('AppNotify.color', '#556ee6');
     $appName  = session('AppNotify.name',  'HMNotify');
 @endphp
 <!doctype html>
