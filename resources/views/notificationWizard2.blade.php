@@ -1,446 +1,767 @@
 @extends('layouts.app')
 
-@section('title', '| Nueva notificacion')
+@section('title', '- Envio de Notificaciones')
+
+@php
+    $primaryColor = config('app.primary_color') ?: session('AppNotify.color', '#556ee6');
+@endphp
 
 @push('css')
-    <link href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet">
-    <style>
-        .wizard-step-content { min-height: 400px; }
-        .preview-device {
-            width: 280px; margin: 0 auto;
-            border: 8px solid #222; border-radius: 30px;
-            overflow: hidden; background: #fff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        .preview-device .notif-preview {
-            padding: 14px; min-height: 200px;
-            display: flex; flex-direction: column; gap: 8px;
-        }
-        .preview-device .notif-image { width: 100%; border-radius: 8px; }
-        .device-row.selected { background-color: rgba(var(--bs-primary-rgb), 0.1); }
-    </style>
+<link href="{{ asset('assets/libs/datatables.net-libs/DataTables-2.0.0/css/dataTables.dataTables.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/libs/spectrum-colorpicker2/spectrum.min.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/css/multiple-select.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/libs/twitter-bootstrap-wizard/prettify.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Asistente de envio</h4>
-                    <p class="card-title-desc">
-                        App actual: <strong>{{ session('AppNotify.name') }}</strong>
-                        &middot; Pais: <strong>{{ session('Pais') }}</strong>
-                    </p>
+<style>
+    .android_template {
+        background-image: url("{{ asset('assets/images/android_template.png') }}");
+        background-position: 0 0;
+        background-size: cover;
+    }
+    .ios_template {
+        background-image: url("{{ asset('assets/images/ios_template.png') }}");
+        background-position: 0 0;
+        background-size: cover;
+    }
+    .android_template_design {
+        background-image: url("{{ asset('assets/images/android_template.png') }}");
+        background-position: 0 0;
+        background-size: cover;
+    }
+    body { background-color: #F1F5F7 !important; }
 
-                    <form id="wizard-form" enctype="multipart/form-data">
-                        @csrf
-                        <div id="notif-wizard" class="twitter-bs-wizard">
-                            <ul class="twitter-bs-wizard-nav nav-justified nav nav-pills">
-                                <li class="nav-item"><a href="#step-design" class="nav-link active" data-bs-toggle="tab">
-                                    <span class="step-number">01</span><span class="step-title">Contenido</span>
-                                </a></li>
-                                <li class="nav-item"><a href="#step-audience" class="nav-link" data-bs-toggle="tab">
-                                    <span class="step-number">02</span><span class="step-title">Audiencia</span>
-                                </a></li>
-                                <li class="nav-item"><a href="#step-schedule" class="nav-link" data-bs-toggle="tab">
-                                    <span class="step-number">03</span><span class="step-title">Programacion</span>
-                                </a></li>
-                                <li class="nav-item"><a href="#step-review" class="nav-link" data-bs-toggle="tab">
-                                    <span class="step-number">04</span><span class="step-title">Revision</span>
-                                </a></li>
-                            </ul>
+    .twitter-bs-wizard .twitter-bs-wizard-pager-link li a { background-color: {{ $primaryColor }} !important; }
+    .twitter-bs-wizard .twitter-bs-wizard-nav .step-number {
+        border: 2px solid {{ $primaryColor }} !important;
+        color: {{ $primaryColor }} !important;
+    }
+    .twitter-bs-wizard .twitter-bs-wizard-nav .nav-link.active .step-number {
+        background-color: {{ $primaryColor }} !important;
+        color: #fff !important;
+    }
+</style>
 
-                            <div class="tab-content twitter-bs-wizard-tab-content wizard-step-content mt-4">
+<div class="container-fluid h-100 notification">
+    <div class="row h-100 ms-1">
 
-                                {{-- STEP 1: Contenido --}}
-                                <div class="tab-pane active" id="step-design">
-                                    <div class="row">
-                                        <div class="col-lg-7">
-                                            <div class="mb-3">
-                                                <label class="form-label">Tipo de notificacion</label>
-                                                <select id="tipoNoti" name="tipoNoti" class="form-select">
-                                                    <option value="0">Informativa (imagen + texto)</option>
-                                                    <option value="1">Multimedia (imagen + texto + botones)</option>
-                                                    <option value="2">HTML (landing page)</option>
-                                                    <option value="4">Texto plano</option>
-                                                </select>
+        <div class="col-lg-12">
+            <h4 class="card-title mb-4">Envio de Notificaciones</h4>
+
+            <div id="progrss-wizard" class="twitter-bs-wizard">
+
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="block_nav"></div>
+                        <ul class="twitter-bs-wizard-nav nav-justified">
+                            <li class="nav-item">
+                                <a href="#design" class="nav-link" data-bs-toggle="tab">
+                                    <span class="step-number"><i class="mdi mdi-card-text-outline"></i></span>
+                                    <span class="step-title">Notificacion</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#audience" class="nav-link" data-bs-toggle="tab">
+                                    <span class="step-number"><i class="mdi mdi-devices"></i></span>
+                                    <span class="step-title">Publico Objetivo</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#programation" class="nav-link" data-bs-toggle="tab">
+                                    <span class="step-number"><i class="mdi mdi-timetable"></i></span>
+                                    <span class="step-title">Programacion</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#revision" class="nav-link" data-bs-toggle="tab">
+                                    <span class="step-number"><i class="mdi mdi-comment-edit"></i></span>
+                                    <span class="step-title">Revision</span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div id="bar" class="progress mt-4 mb-3">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="tab-content twitter-bs-wizard-tab-content pt-1">
+
+                            {{-- STEP 1: DESIGN --}}
+                            <div class="tab-pane" id="design">
+                                <div class="row">
+                                    <div class="col-lg-7">
+                                        <form id="designfrm" method="POST" class="form-horizontal" data-bitwarden-watching="1">
+                                            @csrf
+                                            <div class="row">
+                                                <div class="col-lg-12 mb-4">
+                                                    <div class="row">
+                                                        <input type="hidden" name="tipoNoti" id="tipoNoti" value="0"/>
+                                                        <div class="col-lg-4">
+                                                            <label class="form-label mt-2">Tipo de notificacion</label>
+                                                        </div>
+                                                        <div class="col-lg-8">
+                                                            <ul class="nav nav-pills nav-justified tipoNotiClass" role="tablist">
+                                                                <li class="nav-item waves-effect waves-light">
+                                                                    <a class="nav-link active" data-bs-toggle="tab" href="#SimpleNoti" role="tab" title="Notificacion simple">
+                                                                        <span class="nav-Icon d-sm-none"><i class="mdi mdi-card-text-outline font-size-15"></i></span>
+                                                                        <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-card-text-outline font-size-15 me-1"></i>Informativa</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li class="nav-item waves-effect waves-light">
+                                                                    <a class="nav-link" data-bs-toggle="tab" href="#MultiNoti" role="tab" title="Notificacion Multimedia">
+                                                                        <span class="nav-Icon d-sm-none"><i class="mdi mdi-image-size-select-actual font-size-15"></i></span>
+                                                                        <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-image-size-select-actual font-size-15 me-1"></i>Multimedia</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li class="nav-item waves-effect waves-light">
+                                                                    <a class="nav-link" data-bs-toggle="tab" href="#HTMLNoti" role="tab" title="Notificacion HTML">
+                                                                        <span class="nav-Icon d-sm-none"><i class="mdi mdi-table-eye font-size-15"></i></span>
+                                                                        <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-table-eye font-size-15 me-1"></i>HTML</span>
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="titleNoti">Titulo de la notificacion</label>
+                                                        <input class="form-control" type="text" id="titleNoti" name="titleNoti" required maxlength="100">
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="subTitleNoti">Texto de la notificacion</label>
+                                                        <textarea id="subTitleNoti" class="form-control" name="subTitleNoti" required maxlength="200" rows="3" placeholder="Este textarea tiene un limite de 200 caracteres."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="customFileNoti">Imagen</label>
+                                                        <span id="opImgNoti" class="text-muted font-size-10">(opcional)</span>
+                                                        <input type="file" class="form-control" id="customFileNoti" name="customFileNoti">
+                                                        <div class="text-muted mb-0 mt-1 font-size-10" style="text-align:right;">Seleccione una imagen PNG o JPG (preferiblemente 800x600) de maximo 2 MB.</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12 hmtlSetNoti d-none">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="htmlNoti">Codigo HTML</label>
+                                                        <textarea id="htmlNoti" class="form-control" name="htmlNoti" placeholder="Ingrese su codigo HTML aqui..."></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mb-3 mx-2 modelDesignNoti d-none">
+                                                    <h4 class="card-title mt-4" style="font-weight: 800;">Diseno del Modal</h4>
+                                                    <div class="col-12"><hr class="mt-1 mb-2"></div>
+                                                    <div class="col-lg-12">
+                                                        <div class="row noti-btn-section border rounded p-3 m-2 mb-3">
+                                                            <div class="col-lg-12">
+                                                                <label class="form-label mt-2">Tipo de Modelo (Card)</label>
+                                                                <input type="hidden" name="tipoMode" id="tipoMode" value="1"/>
+                                                                <ul class="nav nav-pills nav-justified tipoDesignNotiClass" role="tablist">
+                                                                    <li class="nav-item waves-effect waves-light">
+                                                                        <a class="nav-link active" data-bs-toggle="tab" href="#InfoCardNoti" role="tab">
+                                                                            <span class="nav-Icon d-sm-none"><i class="mdi mdi-format-align-center font-size-18"></i></span>
+                                                                            <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-format-align-center font-size-18 me-1"></i><br>Info<br>Vertical</span>
+                                                                        </a>
+                                                                    </li>
+                                                                    <li class="nav-item waves-effect waves-light">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#HeaderMediaCardNoti" role="tab">
+                                                                            <span class="nav-Icon d-sm-none"><i class="mdi mdi-format-line-style font-size-18"></i></span>
+                                                                            <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-format-line-style font-size-18 me-1"></i><br>Header<br>Media</span>
+                                                                        </a>
+                                                                    </li>
+                                                                    <li class="nav-item waves-effect waves-light">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#FullImageCardNoti" role="tab">
+                                                                            <span class="nav-Icon d-sm-none"><i class="mdi mdi-image-size-select-actual font-size-18"></i></span>
+                                                                            <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-image-size-select-actual font-size-18 me-1"></i><br>Full<br>Image</span>
+                                                                        </a>
+                                                                    </li>
+                                                                    <li class="nav-item waves-effect waves-light">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#CaptionedImageCardNoti" role="tab">
+                                                                            <span class="nav-Icon d-sm-none"><i class="mdi mdi-image-area-close font-size-18"></i></span>
+                                                                            <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-image-area-close font-size-18 me-1"></i><br>Captioned<br>Image</span>
+                                                                        </a>
+                                                                    </li>
+                                                                    <li class="nav-item waves-effect waves-light">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#TopSideImageCardNoti" role="tab">
+                                                                            <span class="nav-Icon d-sm-none"><i class="mdi mdi-dock-top font-size-18"></i></span>
+                                                                            <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-dock-top font-size-18 me-1"></i><br>Top Side<br>Image</span>
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                            <div class="col-lg-4 mt-4">
+                                                                <div class="mb-2">
+                                                                    <label class="form-label">Color Titulo</label>
+                                                                    <input type="text" class="form-control" id="colorTitleNoti" name="colorTitleNoti" value="#000000">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-4 mt-4">
+                                                                <div class="mb-2">
+                                                                    <label class="form-label">Color Texto</label>
+                                                                    <input type="text" class="form-control" id="colorSubTitleNoti" name="colorSubTitleNoti" value="#000000">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-4 mt-4">
+                                                                <div class="mb-2">
+                                                                    <label class="form-label">Fondo Modal</label>
+                                                                    <input type="text" class="form-control" id="colorModalNoti" name="colorFondoNoti" value="#ffffff">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-2 mx-2 buttonNoti d-none align-items-center">
+                                                    <div class="col">
+                                                        <h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Configuracion Boton</h4>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <button type="button" id="btnAddNotiSection" class="btn btn-success btn-sm waves-effect waves-light">
+                                                            <i class="mdi mdi-card-plus align-middle me-2"></i> Agregar
+                                                        </button>
+                                                    </div>
+                                                    <div class="col-12"><hr class="mt-2 mb-2"></div>
+                                                    <div class="col-12 spacebtn"></div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="col-lg-5">
+                                        <div id="accordion-visualization" class="custom-accordion">
+                                            <div class="card mb-1 shadow-none">
+                                                <a href="#collapseOneNoti" class="text-reset" data-bs-toggle="collapse" aria-expanded="true" aria-controls="collapseOneNoti">
+                                                    <div class="card-header" id="headingOne">
+                                                        <h6 class="m-0"><i class="mdi mdi-card-text"></i> Vista Previa Notificacion</h6>
+                                                    </div>
+                                                </a>
+                                                <div id="collapseOneNoti" class="collapse show" aria-labelledby="headingOne">
+                                                    <div class="card-body">
+                                                        <div class="android_template">
+                                                            <div class="android_noti">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        <div class="title_noti text-left">Titulo de la notificacion</div>
+                                                                        <div class="subTitle_noti text-left">Descripcion de la notificacion</div>
+                                                                    </div>
+                                                                    <div class="col-auto img_noti d-none">
+                                                                        <img src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-muted mb-4 mt-1 font-size-12" style="text-align:center;"><strong>ANDROID</strong></div>
+                                                        <div class="ios_template">
+                                                            <div class="ios_noti">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        <div class="title_noti text-left">Titulo de la notificacion</div>
+                                                                        <div class="subTitle_noti text-left">Descripcion de la notificacion</div>
+                                                                    </div>
+                                                                    <div class="col-auto img_noti d-none">
+                                                                        <img src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-muted mb-4 mt-1 font-size-12" style="text-align:center;"><strong>IOS</strong></div>
+                                                        <hr/>
+                                                        <p class="mb-0 font-size-11">En esta vista previa, se ofrece una idea general de como se mostrara tu mensaje en un dispositivo movil. La apariencia real del mensaje varia en funcion del dispositivo. Para obtener resultados precisos, prueba con un dispositivo real.</p>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <div class="mb-3">
-                                                <label class="form-label">Nombre de la campana (opcional)</label>
-                                                <input type="text" class="form-control" name="campaignName" maxlength="200" placeholder="Ej. Mantenimiento programado abril">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">Titulo</label>
-                                                <input type="text" class="form-control" name="titleNoti" id="titleNoti" maxlength="200">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">Subtitulo / cuerpo</label>
-                                                <textarea class="form-control" name="subTitleNoti" id="subTitleNoti" rows="3" maxlength="500"></textarea>
-                                            </div>
-
-                                            <div class="mb-3" data-show-for="0,1,2">
-                                                <label class="form-label">Imagen (PNG/JPG, max {{ (int) (config('global.upload_max_kb')/1024) }}MB)</label>
-                                                <input type="file" class="form-control" name="imagen" id="imagenInput" accept="image/png,image/jpeg">
-                                            </div>
-
-                                            <div class="mb-3" data-show-for="2">
-                                                <label class="form-label">Archivo HTML</label>
-                                                <input type="file" class="form-control" name="html" id="htmlInput" accept=".html,.htm">
-                                            </div>
-
-                                            <div class="mb-3" data-show-for="1,2">
-                                                <label class="form-label">URL de destino (boton)</label>
-                                                <input type="url" class="form-control" name="urlNoti" placeholder="https://...">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-5">
-                                            <p class="text-muted mb-2 text-center">Vista previa</p>
-                                            <div class="preview-device">
-                                                <div class="notif-preview" id="notifPreview">
-                                                    <img id="previewImg" class="notif-image d-none" src="" alt="">
-                                                    <strong id="previewTitle" class="font-size-14"></strong>
-                                                    <span id="previewSubtitle" class="text-muted font-size-12"></span>
+                                            <div class="card mb-1 shadow-none d-none TwoNoti">
+                                                <a href="#collapseTwoNoti" class="text-reset collapsed" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseTwoNoti">
+                                                    <div class="card-header" id="headingTwo">
+                                                        <h6 class="m-0"><i class="mdi mdi-tooltip-image-outline"></i> Vista Previa Diseno</h6>
+                                                    </div>
+                                                </a>
+                                                <div id="collapseTwoNoti" class="collapse" aria-labelledby="headingTwo">
+                                                    <div class="card-body">
+                                                        <div class="android_template_design">
+                                                            <div class="modal_design">
+                                                                <div class="modal1">
+                                                                    <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
+                                                                    <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                    <div class="title_noti text-center mt-1">Titulo de la notificacion</div>
+                                                                    <div class="subTitle_noti text-center mt-1">Descripcion de la notificacion</div>
+                                                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal2 d-none">
+                                                                    <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
+                                                                    <div class="title_noti text-left mb-1">Titulo de la notificacion</div>
+                                                                    <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                    <div class="subTitle_noti text-left mt-2">Descripcion de la notificacion</div>
+                                                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal3 d-none">
+                                                                    <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
+                                                                    <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                </div>
+                                                                <div class="modal4 d-none">
+                                                                    <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
+                                                                    <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                    <div class="title_noti text-center mt-1">Titulo de la notificacion</div>
+                                                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal5 d-none">
+                                                                    <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
+                                                                    <table>
+                                                                        <tr>
+                                                                            <td style="vertical-align: middle; padding-right:10px;">
+                                                                                <img class="img_noti" src="{{ asset('assets/images/Image-not-found.png') }}"/>
+                                                                            </td>
+                                                                            <td>
+                                                                                <div class="title_noti text-left">Titulo de la notificacion</div>
+                                                                                <div class="subTitle_noti text-left mt-1">Descripcion de la notificacion</div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {{-- STEP 2: Audiencia --}}
-                                <div class="tab-pane" id="step-audience">
-                                    <p class="text-muted">Selecciona los dispositivos destinatarios. Puedes filtrar por plataforma, tipo de entidad o grupo.</p>
+                            {{-- STEP 2: AUDIENCE --}}
+                            <div class="tab-pane" id="audience">
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                                <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab">Filtro Normal</a>
+                                                <a class="nav-link mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" href="#v-pills-profile" role="tab">Plantilla Chasis/Motor</a>
+                                                <a class="nav-link mb-2" id="v-pills-number-tab" data-bs-toggle="pill" href="#v-pills-number" role="tab">Plantilla</a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10 ps-2">
+                                            <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                                                <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel">
+                                                    <form id="filterDispositivo" method="POST">
+                                                        @csrf
+                                                        <div class="row">
+                                                            <div class="col-sm-12 col-md-8 col-lg-4 col-xl-2">
+                                                                <label class="col-form-label fw-bold">Tipo Usuario</label>
+                                                                <select id="tipoUser" class="form-select">
+                                                                    <option value="3" selected>TODOS</option>
+                                                                    <option value="1">Usuario</option>
+                                                                    <option value="2">SubUsuario</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-sm-12 col-md-8 col-lg-4 col-xl-2">
+                                                                <label class="col-form-label fw-bold">Plataforma</label>
+                                                                <select id="plataforma" class="form-select">
+                                                                    <option value="TODOS" selected>TODOS</option>
+                                                                    <option value="ANDROID">ANDROID</option>
+                                                                    <option value="IOS">IOS</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-sm-12 col-md-8 col-lg-4 col-xl-3">
+                                                                <label class="col-form-label fw-bold">Grupos SubUsuarios</label>
+                                                                <select id="grupos" class="form-control select_grupos" multiple="multiple">
+                                                                    @foreach (($listGroups ?? []) as $grupo)
+                                                                        <option value="{{ $grupo['GroupId'] ?? ($grupo['IdGroup'] ?? '') }}" selected> - {{ $grupo['GroupName'] ?? ($grupo['Group'] ?? '') }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-sm-12 col-md-8 col-lg-4 col-xl-3">
+                                                                <label class="col-form-label fw-bold">Tipo Entidad</label>
+                                                                <select id="idTipoEnt" class="form-control select_tipo_entidad" multiple="multiple">
+                                                                    @foreach (($listTipoEntidad ?? []) as $tipo)
+                                                                        <option value="{{ $tipo['EntType'] ?? ($tipo['TEnt'] ?? '') }}" selected> - {{ $tipo['EntName'] ?? ($tipo['Tipo'] ?? '') }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
+                                                                <button type="submit" class="btn btn-primary w-md"><i class="mdi mdi-magnify"></i> Buscar</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
 
-                                    <div class="row mb-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Plataforma</label>
-                                            <select id="filterPlataforma" class="form-select">
-                                                <option value="">Todas</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Tipo de entidad</label>
-                                            <select id="filterTipoEnt" class="form-select">
-                                                <option value="0">Todos</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Grupo</label>
-                                            <select id="filterGrupo" class="form-select">
-                                                <option value="0">Todos</option>
-                                            </select>
+                                                <div class="tab-pane fade" id="v-pills-profile" role="tabpanel">
+                                                    <form id="filterTemplateDispositivo" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <div class="row">
+                                                            <input type="hidden" id="inputChasisList" name="chasisList"/>
+                                                            <input type="hidden" id="inputMotorList"  name="motorList"/>
+                                                            <div class="col">
+                                                                <label class="col-form-label fw-bold">Archivo Chasis/Motor</label>
+                                                                <input id="archivo" type="file" class="form-control" name="archivo" accept=".csv"/>
+                                                            </div>
+                                                            <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
+                                                                <button type="submit" class="btn btn-primary w-md"><i class="mdi mdi-magnify"></i> Enviar</button>
+                                                            </div>
+                                                            <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
+                                                                <a href="{{ asset('assets/templates/plantilla_chasis_motor.csv') }}" class="btn btn-success w-md" download>
+                                                                    <i class="mdi mdi-download"></i> Descargar plantilla Chasis Motor
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <div class="tab-pane fade" id="v-pills-number" role="tabpanel">
+                                                    <form id="filterTemplateNumDispositivo" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <div class="row">
+                                                            <input type="hidden" id="inputNumList" name="numList"/>
+                                                            <div class="col">
+                                                                <label class="col-form-label fw-bold">Archivo</label>
+                                                                <input id="archivoNum" type="file" class="form-control" name="archivoNum" accept=".csv"/>
+                                                            </div>
+                                                            <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
+                                                                <button type="submit" class="btn btn-primary w-md"><i class="mdi mdi-magnify"></i> Enviar</button>
+                                                            </div>
+                                                            <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
+                                                                <a href="{{ asset('assets/templates/plantilla_numeros.csv') }}" class="btn btn-success w-md" download>
+                                                                    <i class="mdi mdi-download"></i> Descargar plantilla
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnFilter">
-                                            <i class="ri-filter-3-line me-1"></i> Aplicar filtros
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSelectAll">
-                                            <i class="ri-checkbox-multiple-line me-1"></i> Seleccionar todos
-                                        </button>
-                                        <span class="ms-3 text-muted"><span id="selectedCount">0</span> seleccionados</span>
-                                    </div>
-
+                                    <hr/>
                                     <div class="table-responsive">
-                                        <table id="audience-tbl" class="table table-striped dt-responsive nowrap w-100">
-                                            <thead>
+                                        <table id="datatable-dispositivos-alt" class="table table-centered datatable dt-responsive nowrap" data-bs-page-length="5" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                                            <thead class="table-light">
                                                 <tr>
-                                                    <th style="width:30px;"><input type="checkbox" id="chkAll"></th>
-                                                    <th>Usuario</th>
-                                                    <th>Min</th>
+                                                    <th style="width: 20px;">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" id="ordercheck">
+                                                            <label class="form-check-label mb-0" for="ordercheck">&nbsp;</label>
+                                                        </div>
+                                                    </th>
+                                                    <th>App</th>
+                                                    <th>Id</th>
+                                                    <th class="d-none">Name</th>
+                                                    <th>Nombre Usuario/SubUsuario</th>
+                                                    <th>Grupo</th>
+                                                    <th># Celular</th>
                                                     <th>Plataforma</th>
                                                     <th>Modelo</th>
+                                                    <th>Tipo Entidad</th>
                                                 </tr>
                                             </thead>
+                                            <tbody></tbody>
                                         </table>
                                     </div>
                                 </div>
+                            </div>
 
-                                {{-- STEP 3: Programacion --}}
-                                <div class="tab-pane" id="step-schedule">
-                                    <p class="text-muted">Elige cuando enviar la notificacion.</p>
+                            {{-- STEP 3: PROGRAMATION --}}
+                            <div class="tab-pane" id="programation">
+                                <form id="programationfrm" method="POST">
+                                    @csrf
+                                    <div class="row">
+                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Campana</h4></div>
+                                        <div class="col-12"><hr class="mt-2 mb-2"></div>
+                                        <div class="col-12">
+                                            <div class="row border rounded p-3 m-3 mb-3">
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="titleCampaing">Titulo de la campana</label>
+                                                        <input class="form-control" type="text" id="titleCampaing" name="titleCampaing" required maxlength="100">
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="subTitleCampaing">Descripcion de la campana</label>
+                                                        <textarea id="subTitleCampaing" class="form-control" name="subTitleCampaing" required maxlength="200" rows="3" placeholder="Este textarea tiene un limite de 200 caracteres."></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="program" id="prog0" value="0" checked>
-                                            <label class="form-check-label" for="prog0"><strong>Ahora</strong> (envio inmediato)</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="program" id="prog1" value="1">
-                                            <label class="form-check-label" for="prog1"><strong>Una vez</strong> en fecha especifica</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="program" id="prog2" value="2">
-                                            <label class="form-check-label" for="prog2"><strong>Diario</strong> a la misma hora</label>
+                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Programacion</h4></div>
+                                        <div class="col-12"><hr class="mt-2 mb-2"></div>
+                                        <div class="col-12">
+                                            <div class="row border rounded p-3 m-3 mb-3">
+                                                <div class="col-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="program">Tipo de Programacion de envio</label>
+                                                        <select class="form-select" id="program" name="program" required>
+                                                            <optgroup label="Notificacion Unica">
+                                                                <option value="0" selected>Ahora</option>
+                                                                <option value="1">Programado</option>
+                                                            </optgroup>
+                                                            <optgroup label="Notificaciones Recurrentes">
+                                                                <option value="2">Diariamente</option>
+                                                                <option value="3">Personalizar (Proximamente)</option>
+                                                            </optgroup>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12" id="schedule-once">
+                                                    <div class="row p-3">
+                                                        <div class="col-12 p-0"><hr class="m-0 mb-4"></div>
+                                                        <div class="col-md-6 ps-0">
+                                                            <div class="mb-3">
+                                                                <label class="form-label" for="schedule_date">Fecha de envio</label>
+                                                                <input type="date" class="form-control" id="schedule_date" name="schedule_date" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label" for="schedule_time">Hora de envio</label>
+                                                                <input type="time" class="form-control" id="schedule_time" name="schedule_time" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 ps-0">
+                                                            <small class="text-muted">La notificacion se enviara una sola vez en la fecha y hora seleccionadas.</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 d-none" id="schedule-daily">
+                                                    <div class="row p-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label" for="schedule_daily_time">Hora diaria</label>
+                                                            <input type="time" class="form-control" id="schedule_daily_time" name="schedule_daily_time" step="60">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label" for="schedule_daily_start">Fecha inicio</label>
+                                                            <input type="date" class="form-control" id="schedule_daily_start" name="schedule_daily_start">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label" for="schedule_daily_end">Fecha fin</label>
+                                                            <input type="date" class="form-control" id="schedule_daily_end" name="schedule_daily_end">
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <small class="text-muted d-block mt-2">Se enviara todos los dias a la hora indicada dentro del rango de fechas.</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 d-none" id="schedule-custom">
+                                                    <div class="row p-3">
+                                                        <div class="col-12 mb-3">
+                                                            <label class="form-label" for="custom_type">Tipo de repeticion</label>
+                                                            <select class="form-select" id="custom_type" name="custom_type">
+                                                                <option value="">Seleccione</option>
+                                                                <option value="every_n_days">Cada N dias</option>
+                                                                <option value="weekly">Semanal</option>
+                                                                <option value="monthly">Mensual</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-12 d-none" id="custom-every-n-days">
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_every_n">Cada</label>
+                                                                    <input type="number" min="1" class="form-control" id="custom_every_n" name="custom_every_n">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_time_n">Hora</label>
+                                                                    <input type="time" class="form-control" id="custom_time_n" name="custom_time_n">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_start_n">Fecha inicio</label>
+                                                                    <input type="date" class="form-control" id="custom_start_n" name="custom_start_n">
+                                                                </div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara cada <b>N</b> dias, desde la fecha inicio, a la hora indicada.</small></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12 d-none" id="custom-weekly">
+                                                            <div class="row">
+                                                                <div class="col-12 mb-2">
+                                                                    <label class="form-label">Dias de la semana</label>
+                                                                    <div class="d-flex flex-wrap gap-3">
+                                                                        <label class="m-0"><input type="checkbox" value="1" name="custom_week_day[]" class="custom_week_day"> Lun</label>
+                                                                        <label class="m-0"><input type="checkbox" value="2" name="custom_week_day[]" class="custom_week_day"> Mar</label>
+                                                                        <label class="m-0"><input type="checkbox" value="3" name="custom_week_day[]" class="custom_week_day"> Mie</label>
+                                                                        <label class="m-0"><input type="checkbox" value="4" name="custom_week_day[]" class="custom_week_day"> Jue</label>
+                                                                        <label class="m-0"><input type="checkbox" value="5" name="custom_week_day[]" class="custom_week_day"> Vie</label>
+                                                                        <label class="m-0"><input type="checkbox" value="6" name="custom_week_day[]" class="custom_week_day"> Sab</label>
+                                                                        <label class="m-0"><input type="checkbox" value="0" name="custom_week_day[]" class="custom_week_day"> Dom</label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_week_time">Hora</label>
+                                                                    <input type="time" class="form-control" id="custom_week_time" name="custom_week_time">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_week_start">Fecha inicio</label>
+                                                                    <input type="date" class="form-control" id="custom_week_start" name="custom_week_start">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_week_end">Fecha fin (opcional)</label>
+                                                                    <input type="date" class="form-control" id="custom_week_end" name="custom_week_end">
+                                                                </div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara en los dias seleccionados a la hora indicada (hasta la fecha fin si la defines).</small></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12 d-none" id="custom-monthly">
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_month_day">Dia del mes</label>
+                                                                    <input type="number" min="1" max="31" class="form-control" id="custom_month_day" name="custom_month_day">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_month_time">Hora</label>
+                                                                    <input type="time" class="form-control" id="custom_month_time" name="custom_month_time">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label" for="custom_month_start">Fecha inicio</label>
+                                                                    <input type="date" class="form-control" id="custom_month_start" name="custom_month_start">
+                                                                </div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara cada mes el dia indicado a la hora indicada, desde la fecha inicio.</small></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                </form>
+                            </div>
 
-                                    <div id="scheduleOnce" class="d-none">
-                                        <div class="row">
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">Fecha</label>
-                                                <input type="date" class="form-control" name="scheduleDate">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">Hora</label>
-                                                <input type="time" class="form-control" name="scheduleTime">
-                                            </div>
-                                        </div>
-                                    </div>
+                            {{-- STEP 4: REVISION --}}
+                            <div class="tab-pane" id="revision">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-8">
+                                        <div class="text-center">
+                                            <div><h5 class="mb-5">Revision Mensaje</h5></div>
+                                            <div id="rev_content mt-2">
+                                                <div class="row">
+                                                    <div class="col-6 pe-4">
+                                                        <div class="rev_content_visual">
+                                                            <div id="accordion-visualization2" class="custom-accordion"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6 ps-4">
+                                                        <form id="NotificationSendfrm" method="POST">
+                                                            @csrf
+                                                            <input type="hidden" id="programation_h"        name="programation_h">
+                                                            <input type="hidden" id="schedule_date_h"       name="schedule_date_h">
+                                                            <input type="hidden" id="schedule_time_h"       name="schedule_time_h">
+                                                            <input type="hidden" id="schedule_daily_time_h"  name="schedule_daily_time_h">
+                                                            <input type="hidden" id="schedule_daily_start_h" name="schedule_daily_start_h">
+                                                            <input type="hidden" id="schedule_daily_end_h"   name="schedule_daily_end_h">
+                                                            <input type="hidden" id="custom_rule_json_h"     name="custom_rule_json_h">
+                                                            <input type="hidden" id="titleCampaing_h"        name="titleCampaing_h">
+                                                            <input type="hidden" id="subTitleCampaing_h"     name="subTitleCampaing_h">
+                                                        </form>
 
-                                    <div id="scheduleDaily" class="d-none">
-                                        <div class="row">
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">Hora diaria</label>
-                                                <input type="time" class="form-control" name="dailyTime">
+                                                        <ul class="list-unstyled activity-wid">
+                                                            <li class="activity-list">
+                                                                <div class="activity-icon avatar-xs">
+                                                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-card-text-outline"></i></span>
+                                                                </div>
+                                                                <div class="text-left">
+                                                                    <div><h5 class="font-size-13 mb-1">Contenido Aplicacion</h5></div>
+                                                                    <div><p class="text-muted mb-0 subtitle_input_text"></p></div>
+                                                                </div>
+                                                            </li>
+                                                            <li class="activity-list">
+                                                                <div class="activity-icon avatar-xs">
+                                                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-devices"></i></span>
+                                                                </div>
+                                                                <div class="text-left">
+                                                                    <div><h5 class="font-size-13 mb-1">Audiencia Objetivo</h5></div>
+                                                                    <div><p class="text-muted mb-0 count_datatable"></p></div>
+                                                                </div>
+                                                            </li>
+                                                            <li class="activity-list">
+                                                                <div class="activity-icon avatar-xs">
+                                                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-timetable"></i></span>
+                                                                </div>
+                                                                <div class="text-left">
+                                                                    <div><h5 class="font-size-13 mb-1">Programacion</h5></div>
+                                                                    <div><p class="text-muted mb-0 programacion_text"></p></div>
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">Desde</label>
-                                                <input type="date" class="form-control" name="dailyStartDate">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">Hasta (opcional)</label>
-                                                <input type="date" class="form-control" name="dailyEndDate">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- STEP 4: Revision --}}
-                                <div class="tab-pane" id="step-review">
-                                    <p class="text-muted">Revisa antes de enviar.</p>
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <dl class="row mb-0" id="reviewSummary">
-                                                <dt class="col-sm-3">Tipo</dt>   <dd class="col-sm-9" id="rev-tipo">-</dd>
-                                                <dt class="col-sm-3">Titulo</dt> <dd class="col-sm-9" id="rev-title">-</dd>
-                                                <dt class="col-sm-3">Audiencia</dt><dd class="col-sm-9" id="rev-audience">-</dd>
-                                                <dt class="col-sm-3">Cuando</dt> <dd class="col-sm-9" id="rev-when">-</dd>
-                                            </dl>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <ul class="pager wizard twitter-bs-wizard-pager-link mt-4">
-                                <li class="previous"><a href="javascript:;" class="btn btn-outline-secondary"><i class="ri-arrow-left-line me-1"></i> Anterior</a></li>
-                                <li class="next"><a href="javascript:;" class="btn btn-primary">Siguiente <i class="ri-arrow-right-line ms-1"></i></a></li>
-                            </ul>
                         </div>
-                    </form>
+                    </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <ul class="pager wizard twitter-bs-wizard-pager-link pt-0">
+                            <li class="previous d-none"><a href="javascript: void(0);">Ant</a></li>
+                            <li class="next d-none"><a href="javascript: void(0);">Sig</a></li>
+                            <li class="previous_custom disabled"><a href="javascript: void(0);">Anterior</a></li>
+                            <button id="btnPublic" type="button" class="btn btn-success waves-effect waves-light float-end d-none">Publicar</button>
+                            <li class="next_custom float-end"><a href="javascript: void(0);">Siguiente</a></li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
-<script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
-/* HMNotify Wizard v2 - flujo SSO. */
-(function () {
-    'use strict';
-    const csrf = $('meta[name="csrf-token"]').attr('content');
-    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
-
-    let audienceTable = null;
-    let selectedTargets = new Map(); // key: Min, value: {Name, DId, App, Min}
-
-    // ---- STEP 1: toggles + preview ----
-    function updateFieldVisibility() {
-        const v = $('#tipoNoti').val();
-        $('[data-show-for]').each(function () {
-            const allowed = $(this).data('show-for').toString().split(',');
-            $(this).toggle(allowed.includes(v));
-        });
-    }
-
-    function updatePreview() {
-        $('#previewTitle').text($('#titleNoti').val());
-        $('#previewSubtitle').text($('#subTitleNoti').val());
-        const file = $('#imagenInput')[0].files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => $('#previewImg').attr('src', e.target.result).removeClass('d-none');
-            reader.readAsDataURL(file);
-        }
-    }
-
-    $('#tipoNoti').on('change', updateFieldVisibility);
-    $('#titleNoti, #subTitleNoti').on('input', updatePreview);
-    $('#imagenInput').on('change', updatePreview);
-    updateFieldVisibility();
-
-    // ---- STEP 2: cargar catalogos + tabla audiencia ----
-    function loadCatalogos() {
-        $.get('{{ route('api.catalogos') }}').done(function (resp) {
-            (resp.Platforms || []).forEach(p => $('#filterPlataforma').append(
-                $('<option>').val(p.Platform).text(p.Platform)));
-            (resp.EntTypes || []).forEach(t => $('#filterTipoEnt').append(
-                $('<option>').val(t.EntType).text(t.EntName)));
-            (resp.Groups || []).forEach(g => $('#filterGrupo').append(
-                $('<option>').val(g.GroupId).text(g.GroupName)));
-        });
-    }
-
-    function loadAudience(useFilters) {
-        const url     = useFilters ? '{{ route('api.dispositivos-alt') }}' : '{{ route('api.dispositivos') }}';
-        const payload = useFilters ? {
-            plataforma: $('#filterPlataforma').val() || null,
-            idTipoEnt:  $('#filterTipoEnt').val(),
-            idSubGrupo: $('#filterGrupo').val(),
-            filtroTipoUser: 3,
-        } : {};
-
-        $.post(url, payload).done(function (resp) {
-            const rows = (resp.Devices || []).map(function (r) {
-                r.__min = r.Min || '';
-                return r;
-            });
-
-            if (audienceTable) audienceTable.destroy();
-            $('#audience-tbl tbody').empty();
-
-            audienceTable = $('#audience-tbl').DataTable({
-                data: rows,
-                columns: [
-                    { data: null, orderable: false, render: function (d) {
-                        const checked = selectedTargets.has(d.__min) ? 'checked' : '';
-                        return `<input type="checkbox" class="chk-device" data-min="${d.__min}" ${checked}>`;
-                    }},
-                    { data: 'User',     defaultContent: '-' },
-                    { data: 'Min',      defaultContent: '-' },
-                    { data: 'Platform', defaultContent: '-' },
-                    { data: 'DevModel', defaultContent: '-' },
-                ],
-                pageLength: 25,
-                language: { search: 'Buscar:', emptyTable: 'Sin dispositivos', zeroRecords: 'Sin resultados' },
-                createdRow: function (row, data) {
-                    if (selectedTargets.has(data.__min)) $(row).addClass('selected');
-                    $(row).find('.chk-device').on('change', function () {
-                        const min = $(this).data('min');
-                        if (this.checked) {
-                            selectedTargets.set(min, { Name: data.User || '', DId: data.Vid || '', App: {{ session('AppNotify.idLocal', 1) }}, Min: min });
-                            $(row).addClass('selected');
-                        } else {
-                            selectedTargets.delete(min);
-                            $(row).removeClass('selected');
-                        }
-                        $('#selectedCount').text(selectedTargets.size);
-                    });
-                }
-            });
-            $('#selectedCount').text(selectedTargets.size);
-        });
-    }
-
-    $('#btnFilter').on('click', () => loadAudience(true));
-    $('#btnSelectAll').on('click', function () {
-        $('#audience-tbl .chk-device').each(function () {
-            if (!this.checked) { this.checked = true; $(this).trigger('change'); }
-        });
-    });
-
-    // ---- STEP 3: radio toggle ----
-    $('input[name="program"]').on('change', function () {
-        const v = $(this).val();
-        $('#scheduleOnce').toggleClass('d-none', v !== '1');
-        $('#scheduleDaily').toggleClass('d-none', v !== '2');
-    });
-
-    // ---- STEP 4: revision ----
-    function updateReview() {
-        $('#rev-tipo').text($('#tipoNoti option:selected').text());
-        $('#rev-title').text($('#titleNoti').val() || '-');
-        $('#rev-audience').text(selectedTargets.size + ' dispositivos');
-        const prog = $('input[name="program"]:checked').val();
-        let when = 'Ahora';
-        if (prog === '1') when = 'Una vez: ' + $('[name=scheduleDate]').val() + ' ' + $('[name=scheduleTime]').val();
-        if (prog === '2') when = 'Diario a las ' + $('[name=dailyTime]').val();
-        $('#rev-when').text(when);
-    }
-
-    // ---- Wizard navigation manual (simple tab switching) ----
-    const tabs = ['#step-design', '#step-audience', '#step-schedule', '#step-review'];
-    function currentIdx() {
-        return tabs.findIndex(t => $(t).hasClass('active'));
-    }
-    function goTo(idx) {
-        if (idx < 0 || idx >= tabs.length) return;
-        tabs.forEach((t, i) => {
-            $(`[href="${t}"]`).toggleClass('active', i === idx);
-            $(t).toggleClass('active show', i === idx);
-        });
-        if (idx === 1 && !audienceTable) loadAudience(false);
-        if (idx === 3) updateReview();
-
-        $('.pager .previous a').toggleClass('disabled', idx === 0);
-        $('.pager .next a').text(idx === tabs.length - 1 ? 'Enviar' : 'Siguiente')
-            .toggleClass('btn-primary', true);
-    }
-
-    $('.pager .next a').on('click', function () {
-        const idx = currentIdx();
-        if (idx === tabs.length - 1) {
-            submitWizard();
-        } else {
-            goTo(idx + 1);
-        }
-    });
-    $('.pager .previous a').on('click', function () { goTo(currentIdx() - 1); });
-    $('.twitter-bs-wizard-nav a').on('shown.bs.tab', function () {
-        const href = $(this).attr('href');
-        const idx  = tabs.indexOf(href);
-        if (idx === 1 && !audienceTable) loadAudience(false);
-        if (idx === 3) updateReview();
-    });
-
-    // ---- Submit ----
-    function submitWizard() {
-        if (selectedTargets.size === 0) {
-            Swal.fire({ icon: 'warning', title: 'Sin destinatarios', text: 'Selecciona al menos 1 dispositivo.' });
-            return;
-        }
-
-        const fd = new FormData(document.getElementById('wizard-form'));
-        Array.from(selectedTargets.values()).forEach((t, i) => {
-            fd.append(`targets[${i}][Name]`, t.Name);
-            fd.append(`targets[${i}][DId]`,  t.DId);
-            fd.append(`targets[${i}][App]`,  t.App);
-            fd.append(`targets[${i}][Min]`,  t.Min);
-        });
-
-        Swal.fire({ title: 'Enviando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-        $.ajax({
-            url: '{{ route('wizard.send') }}', method: 'POST', data: fd,
-            processData: false, contentType: false,
-        }).done(function (resp) {
-            Swal.close();
-            if (!resp || resp.Error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: (resp && resp.Mensaje) || 'No se pudo enviar.' });
-                return;
-            }
-            Swal.fire({
-                icon: 'success', title: 'Enviada!',
-                text: `Send #${resp.Wizard?.SendId || '-'} creado${resp.Wizard?.CampaignId ? ` (Campana #${resp.Wizard.CampaignId})` : ''}.`,
-            }).then(() => window.location = '{{ route('dashboard') }}');
-        }).fail(function (xhr) {
-            Swal.close();
-            const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Error de servidor';
-            Swal.fire({ icon: 'error', title: 'Error', text: msg });
-        });
-    }
-
-    loadCatalogos();
-    goTo(0);
-})();
+    var tableData;
+    // Endpoints expuestos por HMNotify (Laravel 12) - proxy hacia HMSrvAuth
+    var postDispositivos            = "{{ route('api.dispositivos-alt') }}";
+    var postDispositivosSendNew2    = "{{ route('wizard.send') }}";
+    var postDispoTemplateSendNew    = "{{ route('wizard.template-send') }}";
+    var postDispoTemplateNumSendNew = "{{ route('wizard.template-num-send') }}";
 </script>
+<script src="{{ asset('assets/libs/datatables.net-libs/DataTables-2.0.0/js/dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/libs/datatables.net-libs/DataTables-2.0.0/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ asset('assets/libs/datatables.net-libs/Select-2.0.0/js/dataTables.select.min.js') }}"></script>
+<script src="{{ asset('assets/libs/datatables.net-libs/Select-2.0.0/js/select.bootstrap4.min.js') }}"></script>
+
+<script src="{{ asset('assets/libs/twitter-bootstrap-wizard/jquery.bootstrap.wizard.min.js') }}"></script>
+<script src="{{ asset('assets/libs/twitter-bootstrap-wizard/prettify.js') }}"></script>
+<script src="{{ asset('assets/libs/bootstrap-maxlength/bootstrap-maxlength.min.js') }}"></script>
+<script src="{{ asset('assets/libs/spectrum-colorpicker2/spectrum.min.js') }}"></script>
+<script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
+<script src="{{ asset('assets/js/pages/form-wizard.init.js') }}"></script>
+<script src="{{ asset('assets/js/pages/form-advanced2.init.js') }}"></script>
+<script src="{{ asset('assets/js/notificationTable.init.js') }}"></script>
+
+<script src="{{ asset('assets/js/pages/multiple-select.min.js') }}"></script>
+<script src="{{ asset('assets/js/pages/datatableDispositivos.init.js') }}"></script>
 @endpush
