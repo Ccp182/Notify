@@ -1,64 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# HMNotify (Laravel 12 + SSO)
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Cliente web del sistema centralizado de notificaciones push de Hunter
+Monitoreo. Reemplaza el HMNotify legacy (Laravel 8 + auth local contra HMSrv).
 
-## About Laravel
+Autenticacion via OAuth2 Authorization Code contra **HMSrvAuth**
+(`auth.24hm.net`). Los 9 endpoints de negocio viven en HMSrvAuth bajo el
+prefijo `/api/{country}/Notify/*`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2+ / Laravel 12
+- Bootstrap 5 / Nazox v2.1.0 (template)
+- Guzzle para HTTP a HMSrvAuth
+- Driver de sesion por archivo (o Redis en multi-nodo)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Estructura relevante
 
-## Learning Laravel
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── SSOController.php         ← OAuth flow (authorize/callback/logout)
+│   │   ├── AppSelectController.php   ← Opcion B: pantalla post-login
+│   │   └── MessageController.php     ← Dashboard + wizard v2 + AJAX proxies
+│   └── Middleware/
+│       ├── EnsureSsoTokenIsValid.php ← Protege rutas autenticadas
+│       └── EnsureAppSelected.php     ← Requiere Session::AppNotify
+├── Services/
+│   └── ExternalApiService.php        ← Cliente HTTP a HMSrvAuth
+├── Helpers/
+│   └── FunctionsHelper.php           ← Helpers globales (autoload files)
+├── Providers/
+│   └── AppServiceProvider.php
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+config/
+├── services.php                       ← core_sso section
+├── global.php                         ← APPS mapping (IdAplicacion core → {local, name, color})
+└── (resto estandar Laravel 12)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+resources/views/
+├── layouts/
+│   ├── app.blade.php                  ← Layout autenticado (Nazox)
+│   ├── auth.blade.php                 ← Layout login/select-app
+│   ├── head-css.blade.php, topbar.blade.php, sidebar.blade.php,
+│   ├── footer.blade.php, vendor-scripts.blade.php, page-title.blade.php
+├── select-app.blade.php               ← Pantalla post-login (Opcion B)
+├── message.blade.php                  ← Dashboard de dispositivos
+├── notificationWizard2.blade.php      ← Wizard v2 (4 pasos)
+└── auth/sso-error.blade.php
 
-## Laravel Sponsors
+public/assets/                         ← Assets Nazox (libs, css, images) - preservados del legacy
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## Rutas
 
-### Premium Partners
+### Publicas
+- `GET /login` → redirige a `auth.24hm.net/oauth/authorize`
+- `GET /auth/callback` → recibe `?code=&state=&country=`, intercambia por token
+- `POST /logout` → cierra sesion local + HMSrvAuth
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### Con SSO valido pero sin app seleccionada
+- `GET /select-app` → lista apps autorizadas (llama `Notify/getUserApps`)
+- `POST /select-app` → guarda `Session::AppNotify`
 
-## Contributing
+### Completamente protegidas (SSO + AppNotify)
+- `GET /dashboard` → listado de dispositivos
+- `GET /wizard` → wizard v2
+- `POST /wizard/send` → envia la campana
+- `POST /wizard/template-send` / `/wizard/template-num-send` → CSV masivo
+- `POST /api-proxy/dispositivos*` / `GET /api-proxy/catalogos` → AJAX proxies
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Flujo OAuth multi-pais (reglas de oro)
 
-## Code of Conduct
+1. `session('Pais')` se setea UNA vez en el callback desde `?country=` inyectado
+   por HMSrvAuth. **NUNCA** se sobrescribe con el `Country` del perfil.
+2. El POST `/oauth/token` siempre incluye `country` en el body (si no,
+   `DomainMiddleware` de HMSrvAuth busca el auth_code en la BD equivocada).
+3. Las llamadas a API siempre usan `/api/{country}/...` con el pais de
+   `session('Pais')`.
+4. El `client_id`/`client_secret` es **el mismo** en las 4 BDs (EC/PE/CO/CL).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Deploy
 
-## Security Vulnerabilities
+### 1. Subir al server
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cd /var/www/html/
+git clone -b NotifySSO https://github.com/Ccp182/Notify.git HMNotify
+cd HMNotify
+```
 
-## License
+### 2. Instalar deps
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+composer install --optimize-autoloader --no-dev
+```
+
+### 3. Configurar .env
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Editar `.env`:
+- `APP_URL=https://hmnotify.24hm.net`
+- `APP_DEBUG=false`
+- `CORE_SSO_CLIENT_ID=<UUID del passport:client creado>`
+- `CORE_SSO_CLIENT_SECRET=<secret plaintext>`
+- `APPS='{...}'` con el mapping final para cada pais
+
+### 4. Permisos
+
+```bash
+chown -R www-data:www-data storage bootstrap/cache public/assets/upload
+chmod -R 775 storage bootstrap/cache public/assets/upload
+```
+
+### 5. Caches
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 6. Virtual host (Apache ejemplo)
+
+```apache
+<VirtualHost *:443>
+    ServerName hmnotify.24hm.net
+    DocumentRoot /var/www/html/HMNotify/public
+
+    <Directory /var/www/html/HMNotify/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/hmnotify.24hm.net/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/hmnotify.24hm.net/privkey.pem
+
+    ErrorLog  ${APACHE_LOG_DIR}/hmnotify-error.log
+    CustomLog ${APACHE_LOG_DIR}/hmnotify-access.log combined
+</VirtualHost>
+```
+
+Nginx equivalente: `root /var/www/html/HMNotify/public;` + bloque PHP-FPM
+estandar de Laravel.
+
+### 7. Verificacion
+
+- `https://hmnotify.24hm.net/` → redirige a login SSO.
+- Login → callback → `/select-app` (o auto redirect si 1 sola app).
+- Dashboard muestra dispositivos activos.
+- Wizard permite crear/programar notificacion.
+
+## Pre-requisitos en HMSrvAuth
+
+Antes del deploy, asegurar:
+
+- ✅ OAuth client creado en PX_DB con
+  `php artisan passport:client --redirect_uri="https://hmnotify.24hm.net/auth/callback" --name="HMNotify"`.
+- ✅ `oauth_clients` replicado a PX_DB_PERU, PX_DB_CO, PX_DB_CL
+  (script en `HMSrvAuth/database/sql/passport_client_hmnotify.sql`).
+- ✅ 11 SPs `spNT_*` instalados en las 4 BDs
+  (carpeta `HMSrvAuth/database/sp/`).
+- ✅ 9 rutas `/api/{country}/Notify/*` registradas en HMSrvAuth
+  (ya en `routes/api.php` de HMSrvAuth).
+
+## Skills relacionadas (para sesiones futuras de Claude)
+
+- `hm-client-sso` — patron OAuth2 cliente.
+- `hm-architect-auth` — arquitectura HMSrvAuth.
+- `hm-nazox` — design system Nazox v2.1.0.
+- `sp-hunter` — estandar de Stored Procedures.
+
+## Rama
+
+- `main`: HMNotify legacy (Laravel 8). Congelado, solo lectura.
+- `NotifySSO`: esta migracion (Laravel 12 + SSO). Commit de trabajo.
