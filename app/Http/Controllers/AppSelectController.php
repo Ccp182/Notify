@@ -124,27 +124,38 @@ class AppSelectController extends Controller
 
     private function setSessionApp(array $app): void
     {
-        // Branding canonico vive en HMSrvAuth/config/apps.php (logo CDN, color,
-        // titulo, favicon, bg). Se consulta una vez en la seleccion y se cachea
-        // en sesion para que layout/wizard/preview no vuelvan a pegar al API.
-        $branding = $this->api->cachedPost('Notify/getAppBranding', [
-            'app'     => $app['idCore'],
-            'idLocal' => $app['idLocal'],
-        ], 1800);
+        // Nombre y color vienen del mapping local (.env APPS) — es la fuente de
+        // verdad para lo que el usuario ve en topbar/tema. El API
+        // Notify/getAppBranding se usa SOLO para completar recursos que el
+        // .env no tiene (logo, favicon, bg, img_pri). Preferimos matchear por
+        // idName cuando nuestro .env lo trae (evita colisiones AppCore entre
+        // apps que comparten numero en legacy).
+        try {
+            $branding = $this->api->cachedPost('Notify/getAppBranding', [
+                'idName'  => $app['name']    ?? null,
+                'app'     => $app['idCore']  ?? null,
+                'idLocal' => $app['idLocal'] ?? null,
+            ], 1800);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('getAppBranding failed', [
+                'app' => $app, 'msg' => $e->getMessage(),
+            ]);
+            $branding = null;
+        }
 
-        $isValid = is_array($branding) && empty($branding['Error']);
+        $ok = is_array($branding) && empty($branding['Error']);
 
         Session::put('AppNotify', [
-            'idCore'   => $app['idCore'],
-            'idLocal'  => $app['idLocal'],
-            'idName'   => $isValid ? ($branding['id_name'] ?? null) : null,
-            'name'     => $isValid ? ($branding['name']     ?? $app['name']) : $app['name'],
-            'title'    => $isValid ? ($branding['title']    ?? null) : null,
-            'color'    => $isValid ? ($branding['color']    ?? $app['color'] ?? '#556ee6') : ($app['color'] ?? '#556ee6'),
-            'logo'     => $isValid ? ($branding['logo']     ?? null) : null,
-            'favicon'  => $isValid ? ($branding['favicon']  ?? null) : null,
-            'bg'       => $isValid ? ($branding['bg']       ?? null) : null,
-            'img_pri'  => $isValid ? ($branding['img_pri']  ?? null) : null,
+            'idCore'  => $app['idCore'],
+            'idLocal' => $app['idLocal'],
+            'name'    => $app['name'],
+            'color'   => $app['color'] ?? '#556ee6',
+            // Solo recursos visuales que no duplicamos en .env
+            'logo'    => $ok ? ($branding['logo']    ?? null) : null,
+            'favicon' => $ok ? ($branding['favicon'] ?? null) : null,
+            'bg'      => $ok ? ($branding['bg']      ?? null) : null,
+            'img_pri' => $ok ? ($branding['img_pri'] ?? null) : null,
+            'title'   => $ok ? ($branding['title']   ?? $app['name']) : $app['name'],
         ]);
     }
 }
