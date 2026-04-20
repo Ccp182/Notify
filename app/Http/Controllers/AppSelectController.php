@@ -114,8 +114,9 @@ class AppSelectController extends Controller
             $result[] = [
                 'idCore'  => $idCore,
                 'idLocal' => $idLocal ?: (int) ($meta['local'] ?? 0),
-                'name'    => $meta['name']  ?? 'APP_'.$idCore,
-                'color'   => $meta['color'] ?? '#556ee6',
+                'name'    => $meta['name']   ?? 'APP_'.$idCore,
+                'idName'  => $meta['idName'] ?? $meta['name'] ?? null,
+                'color'   => $meta['color']  ?? '#556ee6',
             ];
         }
 
@@ -124,15 +125,16 @@ class AppSelectController extends Controller
 
     private function setSessionApp(array $app): void
     {
-        // Nombre y color vienen del mapping local (.env APPS) — es la fuente de
-        // verdad para lo que el usuario ve en topbar/tema. El API
-        // Notify/getAppBranding se usa SOLO para completar recursos que el
-        // .env no tiene (logo, favicon, bg, img_pri). Preferimos matchear por
-        // idName cuando nuestro .env lo trae (evita colisiones AppCore entre
-        // apps que comparten numero en legacy).
+        // Fuente de verdad para branding: HMSrvAuth/config/apps.php (via API
+        // Notify/getAppBranding). El .env local mapea AppCore -> idName para
+        // resolver la entrada correcta cuando el numero APP del config no
+        // coincide con el AppCore de la BD (p.ej. HMMovil=core 14, pero la
+        // entrada canonica en HMSrvAuth es ID_NAME='HMSSO' con APP=99).
+        //
+        // Prioridad: API > .env local > defaults.
         try {
             $branding = $this->api->cachedPost('Notify/getAppBranding', [
-                'idName'  => $app['name']    ?? null,
+                'idName'  => $app['idName']  ?? null,
                 'app'     => $app['idCore']  ?? null,
                 'idLocal' => $app['idLocal'] ?? null,
             ], 1800);
@@ -148,14 +150,14 @@ class AppSelectController extends Controller
         Session::put('AppNotify', [
             'idCore'  => $app['idCore'],
             'idLocal' => $app['idLocal'],
-            'name'    => $app['name'],
-            'color'   => $app['color'] ?? '#556ee6',
-            // Solo recursos visuales que no duplicamos en .env
+            'idName'  => $ok ? ($branding['id_name'] ?? $app['idName'] ?? null) : ($app['idName'] ?? null),
+            'name'    => $ok ? ($branding['name']    ?? $app['name']) : $app['name'],
+            'title'   => $ok ? ($branding['title']   ?? $app['name']) : $app['name'],
+            'color'   => $ok ? ($branding['color']   ?? $app['color'] ?? '#556ee6') : ($app['color'] ?? '#556ee6'),
             'logo'    => $ok ? ($branding['logo']    ?? null) : null,
             'favicon' => $ok ? ($branding['favicon'] ?? null) : null,
             'bg'      => $ok ? ($branding['bg']      ?? null) : null,
             'img_pri' => $ok ? ($branding['img_pri'] ?? null) : null,
-            'title'   => $ok ? ($branding['title']   ?? $app['name']) : $app['name'],
         ]);
     }
 }
