@@ -5,6 +5,7 @@
     <title>HMNotify @yield('title')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="HMNotify - Sistema de notificaciones Hunter Monitoreo" name="description">
+    <meta content="Carlos Carpio Paredes" name="author">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @include('layouts.head-css')
@@ -38,5 +39,6 @@
     </div>
 
     @include('layouts.vendor-scripts')
+    @stack('scripts')
 </body>
 </html>

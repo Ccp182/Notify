@@ -1,8 +1,8 @@
 @extends('layouts.auth')
 
 @section('title', '| Error')
-@section('heading', 'No se pudo iniciar sesion')
-@section('subtitle', 'Hubo un problema con el servidor de autenticacion')
+@section('heading', 'No se pudo iniciar sesión')
+@section('subtitle', 'Hubo un problema con el servidor de autenticación')
 
 @section('card-body')
     @if (!empty($errors))

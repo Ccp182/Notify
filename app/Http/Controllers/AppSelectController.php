@@ -30,23 +30,30 @@ class AppSelectController extends Controller
 
     public function show()
     {
+        $hmsso    = $this->fetchHmssoBranding();
         $response = $this->api->post('Notify/getUserApps');
 
         if (!is_array($response) || ($response['Error'] ?? true)) {
             return view('select-app', [
                 'apps'  => [],
                 'error' => $response['Mensaje'] ?? 'No se pudo consultar las apps autorizadas.',
+                'hmsso' => $hmsso,
             ]);
         }
 
         $rawApps = $response['Apps'] ?? [];
         $apps    = $this->enrichApps($rawApps);
+        $apps = array_values(array_filter(
+            array_map(fn($a) => $this->withBranding($a), $apps),
+            fn($a) => $a['_branding_ok'] ?? false
+        ));
 
         // 0 apps: el usuario no tiene permiso en UsuarioAplicacionNotify
         if (empty($apps)) {
             return view('select-app', [
                 'apps'  => [],
                 'error' => 'Tu usuario no tiene apps autorizadas para HMNotify. Contacta al administrador.',
+                'hmsso' => $hmsso,
             ]);
         }
 
@@ -60,7 +67,29 @@ class AppSelectController extends Controller
         return view('select-app', [
             'apps'  => $apps,
             'error' => null,
+            'hmsso' => $hmsso,
         ]);
+    }
+
+    /**
+     * Branding de HMSSO para el encabezado del selector de apps (logo + color primario).
+     */
+    private function fetchHmssoBranding(): array
+    {
+        try {
+            $b = $this->api->cachedPost('Notify/getAppBranding', [
+                'idName' => 'HMSSO',
+            ], 3600);
+        } catch (\Throwable $e) {
+            $b = null;
+        }
+
+        $ok = is_array($b) && empty($b['Error']);
+        return [
+            'logo'  => $ok ? ($b['logo']  ?? null) : null,
+            'color' => $ok ? ($b['color'] ?? '#556ee6') : '#556ee6',
+            'name'  => $ok ? ($b['name']  ?? 'HMSSO') : 'HMSSO',
+        ];
     }
 
     public function select(Request $request)
@@ -75,6 +104,7 @@ class AppSelectController extends Controller
 
         $selectedAppCore = (int) $request->input('appCore');
         $selected = collect($apps)->firstWhere('idCore', $selectedAppCore);
+        if ($selected) $selected = $this->withBranding($selected);
 
         if (!$selected) {
             return back()->withErrors([
@@ -123,18 +153,16 @@ class AppSelectController extends Controller
         return $result;
     }
 
-    private function setSessionApp(array $app): void
+    /**
+     * Enriquece un app con los datos de branding del HMSrvAuth (cacheado).
+     * Fuente de verdad: HMSrvAuth/config/apps.php via Notify/getAppBranding.
+     */
+    private function withBranding(array $app): array
     {
-        // Fuente de verdad para branding: HMSrvAuth/config/apps.php (via API
-        // Notify/getAppBranding). El .env local mapea AppCore -> idName para
-        // resolver la entrada correcta cuando el numero APP del config no
-        // coincide con el AppCore de la BD (p.ej. HMMovil=core 14, pero la
-        // entrada canonica en HMSrvAuth es ID_NAME='HMSSO' con APP=99).
-        //
-        // Prioridad: API > .env local > defaults.
         try {
             $branding = $this->api->cachedPost('Notify/getAppBranding', [
                 'idName'  => $app['idName']  ?? null,
+                'name'    => $app['name']    ?? null,
                 'app'     => $app['idCore']  ?? null,
                 'idLocal' => $app['idLocal'] ?? null,
             ], 1800);
@@ -147,17 +175,40 @@ class AppSelectController extends Controller
 
         $ok = is_array($branding) && empty($branding['Error']);
 
+        return array_merge($app, [
+            '_branding_ok' => $ok,
+            'idName'     => $ok ? ($branding['id_name']    ?? $app['idName'] ?? null) : ($app['idName'] ?? null),
+            'name'       => $ok ? ($branding['name']       ?? $app['name'])  : $app['name'],
+            'title'      => $ok ? ($branding['title']      ?? $app['name'])  : $app['name'],
+            'color'      => $ok ? ($branding['color']      ?? $app['color'] ?? '#556ee6') : ($app['color'] ?? '#556ee6'),
+            'logo'          => $ok ? ($branding['logo']          ?? null) : null,
+            'logo_white'    => $ok ? ($branding['logo_white']    ?? null) : null,
+            'isotype'       => $ok ? ($branding['isotype']       ?? null) : null,
+            'isotype_white' => $ok ? ($branding['isotype_white'] ?? null) : null,
+            'favicon'       => $ok ? ($branding['favicon']       ?? null) : null,
+            'bg'            => $ok ? ($branding['bg']            ?? null) : null,
+            'img_pri'       => $ok ? ($branding['img_pri']       ?? null) : null,
+        ]);
+    }
+
+    private function setSessionApp(array $app): void
+    {
+        $app = isset($app['logo']) ? $app : $this->withBranding($app);
+
         Session::put('AppNotify', [
-            'idCore'  => $app['idCore'],
-            'idLocal' => $app['idLocal'],
-            'idName'  => $ok ? ($branding['id_name'] ?? $app['idName'] ?? null) : ($app['idName'] ?? null),
-            'name'    => $ok ? ($branding['name']    ?? $app['name']) : $app['name'],
-            'title'   => $ok ? ($branding['title']   ?? $app['name']) : $app['name'],
-            'color'   => $ok ? ($branding['color']   ?? $app['color'] ?? '#556ee6') : ($app['color'] ?? '#556ee6'),
-            'logo'    => $ok ? ($branding['logo']    ?? null) : null,
-            'favicon' => $ok ? ($branding['favicon'] ?? null) : null,
-            'bg'      => $ok ? ($branding['bg']      ?? null) : null,
-            'img_pri' => $ok ? ($branding['img_pri'] ?? null) : null,
+            'idCore'     => $app['idCore'],
+            'idLocal'    => $app['idLocal'],
+            'idName'     => $app['idName']     ?? null,
+            'name'       => $app['name']       ?? null,
+            'title'      => $app['title']      ?? $app['name'] ?? null,
+            'color'      => $app['color']      ?? '#556ee6',
+            'logo'          => $app['logo']          ?? null,
+            'logo_white'    => $app['logo_white']    ?? null,
+            'isotype'       => $app['isotype']       ?? null,
+            'isotype_white' => $app['isotype_white'] ?? null,
+            'favicon'       => $app['favicon']       ?? null,
+            'bg'            => $app['bg']            ?? null,
+            'img_pri'       => $app['img_pri']       ?? null,
         ]);
     }
 }

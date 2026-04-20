@@ -1,4 +1,6 @@
-    <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
+    @php $favicon = session('AppNotify.favicon') ?: asset('assets/images/favicon.ico'); @endphp
+    <link rel="shortcut icon" href="{{ $favicon }}">
+    <link rel="icon" type="image/x-icon" href="{{ $favicon }}">
 
     <!-- Bootstrap 5 (Nazox) -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css">

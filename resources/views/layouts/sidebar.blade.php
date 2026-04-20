@@ -2,7 +2,7 @@
     <div data-simplebar class="h-100">
         <div id="sidebar-menu">
             <ul class="metismenu list-unstyled" id="side-menu">
-                <li class="menu-title">Menu</li>
+                <li class="menu-title">Menú</li>
 
                 <li>
                     <a href="{{ route('dashboard') }}" class="waves-effect {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -14,7 +14,7 @@
                 <li>
                     <a href="{{ route('wizard') }}" class="waves-effect {{ request()->routeIs('wizard') ? 'active' : '' }}">
                         <i class="ri-mail-send-line"></i>
-                        <span>Nueva notificacion</span>
+                        <span>Nueva notificación</span>
                     </a>
                 </li>
 
