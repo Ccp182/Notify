@@ -31,7 +31,7 @@
                 <div class="card-body">
                     <div class="d-flex">
                         <div class="flex-grow-1">
-                            <p class="text-muted fw-medium">Pais</p>
+                            <p class="text-muted fw-medium">País</p>
                             <h4 class="mb-0">{{ session('Pais', 'EC') }}</h4>
                         </div>
                         <div class="flex-shrink-0 align-self-center">
@@ -69,7 +69,7 @@
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h4 class="card-title mb-0">Dispositivos con push activo</h4>
                         <a href="{{ route('wizard') }}" class="btn btn-primary btn-sm">
-                            <i class="ri-mail-send-line me-1"></i> Nueva notificacion
+                            <i class="ri-mail-send-line me-1"></i> Nueva notificación
                         </a>
                     </div>
 
@@ -98,29 +98,27 @@
 <script>
     $(function () {
         const csrf = $('meta[name="csrf-token"]').attr('content');
-
         $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
 
-        $.post('{{ route('api.dispositivos') }}').done(function (resp) {
-            if (!resp || resp.Error) {
-                $('#stat-total').text('0');
-                return;
-            }
-            const rows = resp.Devices || [];
+        // El cache client-side compartido se quito: 35k filas no caben en sessionStorage.
+        // Dashboard y wizard consultan el mismo endpoint; el cache de Laravel (120s por
+        // app/payload) responde al segundo hit en ms sin pegar HMSrvAuth.
+        function renderDashboardTable(rows) {
             $('#stat-total').text(rows.length);
-
             $('#dispositivos-tbl').DataTable({
                 data: rows,
                 columns: [
-                    { data: 'User',     defaultContent: '-' },
-                    { data: 'Min',      defaultContent: '-' },
-                    { data: 'Vid',      defaultContent: '-' },
-                    { data: 'Platform', defaultContent: '-' },
-                    { data: 'DevModel', defaultContent: '-' },
+                    { data: 'Name',  defaultContent: '-' },
+                    { data: 'Min',   defaultContent: '-' },
+                    { data: 'DId',   defaultContent: '-' },
+                    { data: 'Plat',  defaultContent: '-' },
+                    { data: 'MDisp', defaultContent: '-' },
                 ],
                 pageLength: 25,
+                deferRender: true,
+                search: { return: true }, // Enter-only (35k+ registros)
                 language: {
-                    search:      'Buscar:',
+                    search:      'Buscar (Enter):',
                     lengthMenu:  'Mostrar _MENU_ registros',
                     info:        'Mostrando _START_ a _END_ de _TOTAL_',
                     paginate:    { next: 'Siguiente', previous: 'Anterior' },
@@ -128,7 +126,20 @@
                     zeroRecords: 'Sin resultados',
                 }
             });
-        }).fail(function () {
+        }
+
+        console.time('[dashboard] ajax api.dispositivos-alt');
+        $.post('{{ route('api.dispositivos-alt') }}', {
+            plat: 'TODOS', idTipoEnt: null, filtroTipoUser: 3, idSubGrupo: null,
+            template: 'NORMAL', chasisList: '', motorList: '', numList: ''
+        }).done(function (resp) {
+            console.timeEnd('[dashboard] ajax api.dispositivos-alt');
+            var rows = (resp && resp.data) ? resp.data : [];
+            console.log('[dashboard] respuesta ajax:', rows.length, 'filas');
+            renderDashboardTable(rows);
+        }).fail(function (xhr) {
+            console.timeEnd('[dashboard] ajax api.dispositivos-alt');
+            console.error('[dashboard] ajax fallo', xhr && xhr.status, xhr && xhr.responseText);
             alert('No se pudo consultar dispositivos.');
         });
     });

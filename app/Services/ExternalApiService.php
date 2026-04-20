@@ -131,7 +131,10 @@ class ExternalApiService
     public function cachedGet(string $path, array $query = [], int $ttl = 60): ?array
     {
         $key = 'sso_api:'.$this->country().':'.md5($path.serialize($query));
-        return Cache::remember($key, $ttl, fn() => $this->get($path, $query));
+        if (($hit = Cache::get($key)) !== null) return $hit;
+        $fresh = $this->get($path, $query);
+        if ($this->isCacheable($fresh)) Cache::put($key, $fresh, $ttl);
+        return $fresh;
     }
 
     /**
@@ -142,6 +145,20 @@ class ExternalApiService
     public function cachedPost(string $path, array $payload = [], int $ttl = 60): ?array
     {
         $key = 'sso_api:'.$this->country().':post:'.md5($path.serialize($payload));
-        return Cache::remember($key, $ttl, fn() => $this->post($path, $payload));
+        if (($hit = Cache::get($key)) !== null) return $hit;
+        $fresh = $this->post($path, $payload);
+        if ($this->isCacheable($fresh)) Cache::put($key, $fresh, $ttl);
+        return $fresh;
+    }
+
+    /**
+     * No cacheamos respuestas vacias/erroneas: evita dejar en cache por 30min
+     * un fallo transitorio (p.ej. catalogo de TipoEntidad vacio).
+     */
+    private function isCacheable($resp): bool
+    {
+        if (!is_array($resp) || empty($resp)) return false;
+        if (array_key_exists('Error', $resp) && $resp['Error']) return false;
+        return true;
     }
 }

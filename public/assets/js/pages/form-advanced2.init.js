@@ -1,3 +1,46 @@
+// ----- Wizard helpers (Bootstrap 5 Tab API, sin depender del viejo bootstrapWizard) -----
+const WIZARD_STEPS = ['#design', '#audience', '#programation', '#revision'];
+
+function wizardCurrentIndex() {
+    var activeId = $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.active').attr('id')
+                || $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.show').attr('id');
+    if (!activeId) return 0;
+    var idx = WIZARD_STEPS.indexOf('#' + activeId);
+    return idx < 0 ? 0 : idx;
+}
+
+function wizardGo(idx) {
+    if (idx < 0 || idx >= WIZARD_STEPS.length) return;
+    var sel = WIZARD_STEPS[idx];
+    // Navegacion manual (no depende de bootstrap.Tab ni del plugin legacy)
+    $('#progrss-wizard .twitter-bs-wizard-nav .nav-item').removeClass('active');
+    $('#progrss-wizard .twitter-bs-wizard-nav .nav-link').removeClass('active');
+    $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane').removeClass('active show');
+    var $link = $('#progrss-wizard .twitter-bs-wizard-nav a[href="' + sel + '"]');
+    $link.addClass('active');
+    $link.closest('.nav-item').addClass('active');
+    $('#progrss-wizard .twitter-bs-wizard-tab-content > ' + sel).addClass('active show');
+    // marcar pasos previos como done
+    $('#progrss-wizard .twitter-bs-wizard-nav .nav-link').each(function (i) {
+        $(this).toggleClass('done', i < idx);
+    });
+    // actualizar barra de progreso
+    var pct = ((idx + 1) / WIZARD_STEPS.length) * 100;
+    $('#progrss-wizard .progress-bar').css('width', pct + '%');
+    // habilitar/deshabilitar botones
+    $('.pager .previous_custom').toggleClass('disabled', idx === 0);
+    if (idx === WIZARD_STEPS.length - 1) {
+        $('.next_custom').addClass('d-none');
+        $('#btnPublic').removeClass('d-none');
+    } else {
+        $('.next_custom').removeClass('d-none');
+        $('#btnPublic').addClass('d-none');
+    }
+}
+
+function wizardNext() { wizardGo(wizardCurrentIndex() + 1); }
+function wizardPrev() { wizardGo(wizardCurrentIndex() - 1); }
+
 const $container = $('.spacebtn');
 const $btnAdd    = $('#btnAddNotiSection');
 
@@ -410,8 +453,7 @@ $(document).ready(function() {
 
     $('#designfrm').on('submit',function(e){
         e.preventDefault();
-        $('.pager .next').click();
-        $('.pager .previous_custom').removeClass("disabled");
+        // Nota: el avance del wizard lo maneja el click handler de .next_custom
         $('#accordion-visualization2').html($('#accordion-visualization').html());
         $('.subtitle_input_text').text($('#subTitleNoti').val());
         if ($('.nav-item a[href="#SimpleNoti"]').hasClass("active")) {
@@ -583,40 +625,49 @@ function onProgramChange() {
     });
 
 
-$('.pager .previous_custom').on('click',function(e){
-  $('.pager .previous').click();
-  $('.next_custom').removeClass('d-none');
-  $('#btnPublic').addClass('d-none');
+$(document).on('click', '#progrss-wizard .previous_custom', function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  if ($(this).hasClass('disabled')) return;
+  wizardPrev();
 });
 
-$('#progrss-wizard .next_custom').on("click", function () {
+$(document).on("click", '#progrss-wizard .next_custom', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-    if ($('.nav-item a[href="#design"]').hasClass("active")) {
-        let form = document.getElementById("designfrm");
-        if (form.checkValidity()) {
-            setDatatableDispositivosAlt(); // Inicializa DataTable
-            $('#designfrm').trigger('submit');
-        } else {
-            form.reportValidity();
-        }
-    }else if ($('.nav-item a[href="#audience"]').hasClass("active")) {
-        let selectedDevices = tableData.rows({ selected: true }).count(); 
+    // Detectar pestana activa
+    var activeId = $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.active').attr('id')
+                || $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.show').attr('id')
+                || 'design';
+    console.log('[wizard] next_custom clicked, activeId=', activeId);
+
+    if (activeId === 'design') {
+        var form = document.getElementById("designfrm");
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        // Inicializa DataTable (side effect); si falla, igual avanzamos
+        try { setDatatableDispositivosAlt(); } catch (err) { console.warn('[wizard] setDatatableDispositivosAlt error', err); }
+        // Disparar submit (reconstruye visualizacion y otros side-effects), pero no bloquear avance
+        try { $('#designfrm').trigger('submit'); } catch (err) { console.warn('[wizard] designfrm submit error', err); }
+        wizardNext();
+    } else if (activeId === 'audience') {
+        var selectedDevices = (typeof tableData !== 'undefined' && tableData)
+            ? tableData.rows({ selected: true }).count() : 0;
         if (selectedDevices > 0) {
-            ProcessDatatableDisp();
+            try { ProcessDatatableDisp(); } catch (err) { console.warn('[wizard] ProcessDatatableDisp error', err); }
+            wizardNext();
         } else {
             alert('Para poder enviar notificaciones se debe seleccionar al menos un dispositivo de la lista.');
         }
-    }else if ($('.nav-item a[href="#programation"]').hasClass("active")) {
-        let form = document.getElementById("programationfrm");
-        if (form.checkValidity()) {
-            $('#programationfrm').trigger('submit');
-        } else {
-            form.reportValidity();
-        }
+    } else if (activeId === 'programation') {
+        var form2 = document.getElementById("programationfrm");
+        if (!form2.checkValidity()) { form2.reportValidity(); return; }
+        try { $('#programationfrm').trigger('submit'); } catch (err) { console.warn('[wizard] programationfrm submit error', err); }
+        wizardNext();
     } else {
-      console.log("No se envía el formulario porque no está en la pestaña de 'Notificación'.");
+        console.log('[wizard] paso no reconocido, avanzando igualmente:', activeId);
+        wizardNext();
     }
-
 });
 
 
@@ -821,8 +872,7 @@ function initPreviewFromSection($section){
 
 function ProcessDatatableDisp(){
 
-  $('.pager .next').click();
-  $('.pager .previous_custom').removeClass("disabled");
+  // Nota: el avance lo maneja el click handler de .next_custom
   let tableN = $('#datatable-dispositivos-alt').DataTable(); // Obtiene la instancia de DataTable
   let totalDevices = tableN.rows().count(); // Total de filas en toda la tabla (sin importar la paginación)
   let selectedDevices = tableN.rows({ selected: true }).count(); // Total seleccionados en toda la tabla
@@ -962,9 +1012,7 @@ function ProcessProgramation(){
         $('#custom_rule_json_h').val(''); // si no es custom, vacía
     }
     
-     // 2) Avanza wizard
-    $('.pager .next').click();
-    $('.pager .previous_custom').removeClass("disabled");
+     // 2) Avanza wizard (el click handler de .next_custom lo dispara)
 
     // 3) Copiar a hiddens (los que ya tienes)
     $('#programation_h').val($('#program').val());

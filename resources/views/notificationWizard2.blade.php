@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '- Envio de Notificaciones')
+@section('title', '- Envío de Notificaciones')
 
 @php
     $primaryColor = config('app.primary_color') ?: session('AppNotify.color', '#556ee6');
@@ -40,7 +40,7 @@
         color: {{ $primaryColor }} !important;
     }
     .twitter-bs-wizard .twitter-bs-wizard-nav .nav-link.active .step-number {
-        background-color: {{ $primaryColor }} !important;
+        
         color: #fff !important;
     }
 </style>
@@ -49,7 +49,7 @@
     <div class="row h-100 ms-1">
 
         <div class="col-lg-12">
-            <h4 class="card-title mb-4">Envio de Notificaciones</h4>
+            <h4 class="card-title mb-4">Envío de Notificaciones</h4>
 
             <div id="progrss-wizard" class="twitter-bs-wizard">
 
@@ -57,28 +57,28 @@
                     <div class="card-body p-3">
                         <div class="block_nav"></div>
                         <ul class="twitter-bs-wizard-nav nav-justified">
-                            <li class="nav-item">
-                                <a href="#design" class="nav-link" data-bs-toggle="tab">
+                            <li class="nav-item active">
+                                <a href="#design" class="nav-link active" data-bs-toggle="tab">
                                     <span class="step-number"><i class="mdi mdi-card-text-outline"></i></span>
-                                    <span class="step-title">Notificacion</span>
+                                    <span class="step-title">Notificación</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#audience" class="nav-link" data-bs-toggle="tab">
                                     <span class="step-number"><i class="mdi mdi-devices"></i></span>
-                                    <span class="step-title">Publico Objetivo</span>
+                                    <span class="step-title">Público Objetivo</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#programation" class="nav-link" data-bs-toggle="tab">
                                     <span class="step-number"><i class="mdi mdi-timetable"></i></span>
-                                    <span class="step-title">Programacion</span>
+                                    <span class="step-title">Programación</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#revision" class="nav-link" data-bs-toggle="tab">
                                     <span class="step-number"><i class="mdi mdi-comment-edit"></i></span>
-                                    <span class="step-title">Revision</span>
+                                    <span class="step-title">Revisión</span>
                                 </a>
                             </li>
                         </ul>
@@ -94,7 +94,7 @@
                         <div class="tab-content twitter-bs-wizard-tab-content pt-1">
 
                             {{-- STEP 1: DESIGN --}}
-                            <div class="tab-pane" id="design">
+                            <div class="tab-pane active show" id="design">
                                 <div class="row">
                                     <div class="col-lg-7">
                                         <form id="designfrm" method="POST" class="form-horizontal" data-bitwarden-watching="1">
@@ -104,24 +104,24 @@
                                                     <div class="row">
                                                         <input type="hidden" name="tipoNoti" id="tipoNoti" value="0"/>
                                                         <div class="col-lg-4">
-                                                            <label class="form-label mt-2">Tipo de notificacion</label>
+                                                            <label class="form-label mt-2">Tipo de notificación</label>
                                                         </div>
                                                         <div class="col-lg-8">
                                                             <ul class="nav nav-pills nav-justified tipoNotiClass" role="tablist">
                                                                 <li class="nav-item waves-effect waves-light">
-                                                                    <a class="nav-link active" data-bs-toggle="tab" href="#SimpleNoti" role="tab" title="Notificacion simple">
+                                                                    <a class="nav-link active" data-bs-toggle="tab" href="#SimpleNoti" role="tab" title="Notificación simple">
                                                                         <span class="nav-Icon d-sm-none"><i class="mdi mdi-card-text-outline font-size-15"></i></span>
                                                                         <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-card-text-outline font-size-15 me-1"></i>Informativa</span>
                                                                     </a>
                                                                 </li>
                                                                 <li class="nav-item waves-effect waves-light">
-                                                                    <a class="nav-link" data-bs-toggle="tab" href="#MultiNoti" role="tab" title="Notificacion Multimedia">
+                                                                    <a class="nav-link" data-bs-toggle="tab" href="#MultiNoti" role="tab" title="Notificación Multimedia">
                                                                         <span class="nav-Icon d-sm-none"><i class="mdi mdi-image-size-select-actual font-size-15"></i></span>
                                                                         <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-image-size-select-actual font-size-15 me-1"></i>Multimedia</span>
                                                                     </a>
                                                                 </li>
                                                                 <li class="nav-item waves-effect waves-light">
-                                                                    <a class="nav-link" data-bs-toggle="tab" href="#HTMLNoti" role="tab" title="Notificacion HTML">
+                                                                    <a class="nav-link" data-bs-toggle="tab" href="#HTMLNoti" role="tab" title="Notificación HTML">
                                                                         <span class="nav-Icon d-sm-none"><i class="mdi mdi-table-eye font-size-15"></i></span>
                                                                         <span class="nav-TextIcon d-sm-block"><i class="mdi mdi-table-eye font-size-15 me-1"></i>HTML</span>
                                                                     </a>
@@ -133,14 +133,14 @@
 
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="titleNoti">Titulo de la notificacion</label>
+                                                        <label class="form-label" for="titleNoti">Título de la notificación</label>
                                                         <input class="form-control" type="text" id="titleNoti" name="titleNoti" required maxlength="100">
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="subTitleNoti">Texto de la notificacion</label>
-                                                        <textarea id="subTitleNoti" class="form-control" name="subTitleNoti" required maxlength="200" rows="3" placeholder="Este textarea tiene un limite de 200 caracteres."></textarea>
+                                                        <label class="form-label" for="subTitleNoti">Texto de la notificación</label>
+                                                        <textarea id="subTitleNoti" class="form-control" name="subTitleNoti" required maxlength="200" rows="3" placeholder="Este textarea tiene un límite de 200 caracteres."></textarea>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-12">
@@ -148,18 +148,18 @@
                                                         <label class="form-label" for="customFileNoti">Imagen</label>
                                                         <span id="opImgNoti" class="text-muted font-size-10">(opcional)</span>
                                                         <input type="file" class="form-control" id="customFileNoti" name="customFileNoti">
-                                                        <div class="text-muted mb-0 mt-1 font-size-10" style="text-align:right;">Seleccione una imagen PNG o JPG (preferiblemente 800x600) de maximo 2 MB.</div>
+                                                        <div class="text-muted mb-0 mt-1 font-size-10" style="text-align:right;">Seleccione una imagen PNG o JPG (preferiblemente 800x600) de máximo 2 MB.</div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-12 hmtlSetNoti d-none">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="htmlNoti">Codigo HTML</label>
-                                                        <textarea id="htmlNoti" class="form-control" name="htmlNoti" placeholder="Ingrese su codigo HTML aqui..."></textarea>
+                                                        <label class="form-label" for="htmlNoti">Código HTML</label>
+                                                        <textarea id="htmlNoti" class="form-control" name="htmlNoti" placeholder="Ingrese su código HTML aquí..."></textarea>
                                                     </div>
                                                 </div>
 
                                                 <div class="row mb-3 mx-2 modelDesignNoti d-none">
-                                                    <h4 class="card-title mt-4" style="font-weight: 800;">Diseno del Modal</h4>
+                                                    <h4 class="card-title mt-4" style="font-weight: 800;">Diseño del Modal</h4>
                                                     <div class="col-12"><hr class="mt-1 mb-2"></div>
                                                     <div class="col-lg-12">
                                                         <div class="row noti-btn-section border rounded p-3 m-2 mb-3">
@@ -201,7 +201,7 @@
                                                             </div>
                                                             <div class="col-lg-4 mt-4">
                                                                 <div class="mb-2">
-                                                                    <label class="form-label">Color Titulo</label>
+                                                                    <label class="form-label">Color Título</label>
                                                                     <input type="text" class="form-control" id="colorTitleNoti" name="colorTitleNoti" value="#000000">
                                                                 </div>
                                                             </div>
@@ -223,7 +223,7 @@
 
                                                 <div class="row mt-2 mx-2 buttonNoti d-none align-items-center">
                                                     <div class="col">
-                                                        <h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Configuracion Boton</h4>
+                                                        <h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Configuración Botón</h4>
                                                     </div>
                                                     <div class="col-auto">
                                                         <button type="button" id="btnAddNotiSection" class="btn btn-success btn-sm waves-effect waves-light">
@@ -242,7 +242,7 @@
                                             <div class="card mb-1 shadow-none">
                                                 <a href="#collapseOneNoti" class="text-reset" data-bs-toggle="collapse" aria-expanded="true" aria-controls="collapseOneNoti">
                                                     <div class="card-header" id="headingOne">
-                                                        <h6 class="m-0"><i class="mdi mdi-card-text"></i> Vista Previa Notificacion</h6>
+                                                        <h6 class="m-0"><i class="mdi mdi-card-text"></i> Vista Previa Notificación</h6>
                                                     </div>
                                                 </a>
                                                 <div id="collapseOneNoti" class="collapse show" aria-labelledby="headingOne">
@@ -251,8 +251,8 @@
                                                             <div class="android_noti">
                                                                 <div class="row">
                                                                     <div class="col">
-                                                                        <div class="title_noti text-left">Titulo de la notificacion</div>
-                                                                        <div class="subTitle_noti text-left">Descripcion de la notificacion</div>
+                                                                        <div class="title_noti text-left">Título de la notificación</div>
+                                                                        <div class="subTitle_noti text-left">Descripción de la notificación</div>
                                                                     </div>
                                                                     <div class="col-auto img_noti d-none">
                                                                         <img src="{{ asset('assets/images/Image-not-found.png') }}"/>
@@ -265,8 +265,8 @@
                                                             <div class="ios_noti">
                                                                 <div class="row">
                                                                     <div class="col">
-                                                                        <div class="title_noti text-left">Titulo de la notificacion</div>
-                                                                        <div class="subTitle_noti text-left">Descripcion de la notificacion</div>
+                                                                        <div class="title_noti text-left">Título de la notificación</div>
+                                                                        <div class="subTitle_noti text-left">Descripción de la notificación</div>
                                                                     </div>
                                                                     <div class="col-auto img_noti d-none">
                                                                         <img src="{{ asset('assets/images/Image-not-found.png') }}"/>
@@ -276,7 +276,7 @@
                                                         </div>
                                                         <div class="text-muted mb-4 mt-1 font-size-12" style="text-align:center;"><strong>IOS</strong></div>
                                                         <hr/>
-                                                        <p class="mb-0 font-size-11">En esta vista previa, se ofrece una idea general de como se mostrara tu mensaje en un dispositivo movil. La apariencia real del mensaje varia en funcion del dispositivo. Para obtener resultados precisos, prueba con un dispositivo real.</p>
+                                                        <p class="mb-0 font-size-11">En esta vista previa, se ofrece una idea general de cómo se mostrará tu mensaje en un dispositivo móvil. La apariencia real del mensaje varía en función del dispositivo. Para obtener resultados precisos, prueba con un dispositivo real.</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -284,7 +284,7 @@
                                             <div class="card mb-1 shadow-none d-none TwoNoti">
                                                 <a href="#collapseTwoNoti" class="text-reset collapsed" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseTwoNoti">
                                                     <div class="card-header" id="headingTwo">
-                                                        <h6 class="m-0"><i class="mdi mdi-tooltip-image-outline"></i> Vista Previa Diseno</h6>
+                                                        <h6 class="m-0"><i class="mdi mdi-tooltip-image-outline"></i> Vista Previa Diseño</h6>
                                                     </div>
                                                 </a>
                                                 <div id="collapseTwoNoti" class="collapse" aria-labelledby="headingTwo">
@@ -294,21 +294,21 @@
                                                                 <div class="modal1">
                                                                     <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
                                                                     <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
-                                                                    <div class="title_noti text-center mt-1">Titulo de la notificacion</div>
-                                                                    <div class="subTitle_noti text-center mt-1">Descripcion de la notificacion</div>
+                                                                    <div class="title_noti text-center mt-1">Título de la notificación</div>
+                                                                    <div class="subTitle_noti text-center mt-1">Descripción de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal2 d-none">
                                                                     <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
-                                                                    <div class="title_noti text-left mb-1">Titulo de la notificacion</div>
+                                                                    <div class="title_noti text-left mb-1">Título de la notificación</div>
                                                                     <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
-                                                                    <div class="subTitle_noti text-left mt-2">Descripcion de la notificacion</div>
+                                                                    <div class="subTitle_noti text-left mt-2">Descripción de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal3 d-none">
@@ -318,10 +318,10 @@
                                                                 <div class="modal4 d-none">
                                                                     <img class="close_noti" src="{{ asset('assets/images/close.png') }}"/>
                                                                     <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
-                                                                    <div class="title_noti text-center mt-1">Titulo de la notificacion</div>
+                                                                    <div class="title_noti text-center mt-1">Título de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal5 d-none">
@@ -332,14 +332,14 @@
                                                                                 <img class="img_noti" src="{{ asset('assets/images/Image-not-found.png') }}"/>
                                                                             </td>
                                                                             <td>
-                                                                                <div class="title_noti text-left">Titulo de la notificacion</div>
-                                                                                <div class="subTitle_noti text-left mt-1">Descripcion de la notificacion</div>
+                                                                                <div class="title_noti text-left">Título de la notificación</div>
+                                                                                <div class="subTitle_noti text-left mt-1">Descripción de la notificación</div>
                                                                             </td>
                                                                         </tr>
                                                                     </table>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Mas.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -487,40 +487,40 @@
                                 <form id="programationfrm" method="POST">
                                     @csrf
                                     <div class="row">
-                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Campana</h4></div>
+                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Campaña</h4></div>
                                         <div class="col-12"><hr class="mt-2 mb-2"></div>
                                         <div class="col-12">
                                             <div class="row border rounded p-3 m-3 mb-3">
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="titleCampaing">Titulo de la campana</label>
+                                                        <label class="form-label" for="titleCampaing">Título de la campaña</label>
                                                         <input class="form-control" type="text" id="titleCampaing" name="titleCampaing" required maxlength="100">
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="subTitleCampaing">Descripcion de la campana</label>
-                                                        <textarea id="subTitleCampaing" class="form-control" name="subTitleCampaing" required maxlength="200" rows="3" placeholder="Este textarea tiene un limite de 200 caracteres."></textarea>
+                                                        <label class="form-label" for="subTitleCampaing">Descripción de la campaña</label>
+                                                        <textarea id="subTitleCampaing" class="form-control" name="subTitleCampaing" required maxlength="200" rows="3" placeholder="Este textarea tiene un límite de 200 caracteres."></textarea>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Programacion</h4></div>
+                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Programación</h4></div>
                                         <div class="col-12"><hr class="mt-2 mb-2"></div>
                                         <div class="col-12">
                                             <div class="row border rounded p-3 m-3 mb-3">
                                                 <div class="col-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="program">Tipo de Programacion de envio</label>
+                                                        <label class="form-label" for="program">Tipo de Programación de envío</label>
                                                         <select class="form-select" id="program" name="program" required>
-                                                            <optgroup label="Notificacion Unica">
+                                                            <optgroup label="Notificación Única">
                                                                 <option value="0" selected>Ahora</option>
                                                                 <option value="1">Programado</option>
                                                             </optgroup>
                                                             <optgroup label="Notificaciones Recurrentes">
                                                                 <option value="2">Diariamente</option>
-                                                                <option value="3">Personalizar (Proximamente)</option>
+                                                                <option value="3">Personalizar (Próximamente)</option>
                                                             </optgroup>
                                                         </select>
                                                     </div>
@@ -531,18 +531,18 @@
                                                         <div class="col-12 p-0"><hr class="m-0 mb-4"></div>
                                                         <div class="col-md-6 ps-0">
                                                             <div class="mb-3">
-                                                                <label class="form-label" for="schedule_date">Fecha de envio</label>
+                                                                <label class="form-label" for="schedule_date">Fecha de envío</label>
                                                                 <input type="date" class="form-control" id="schedule_date" name="schedule_date" required>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="mb-3">
-                                                                <label class="form-label" for="schedule_time">Hora de envio</label>
+                                                                <label class="form-label" for="schedule_time">Hora de envío</label>
                                                                 <input type="time" class="form-control" id="schedule_time" name="schedule_time" required>
                                                             </div>
                                                         </div>
                                                         <div class="col-12 ps-0">
-                                                            <small class="text-muted">La notificacion se enviara una sola vez en la fecha y hora seleccionadas.</small>
+                                                            <small class="text-muted">La notificación se enviará una sola vez en la fecha y hora seleccionadas.</small>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -562,7 +562,7 @@
                                                             <input type="date" class="form-control" id="schedule_daily_end" name="schedule_daily_end">
                                                         </div>
                                                         <div class="col-12">
-                                                            <small class="text-muted d-block mt-2">Se enviara todos los dias a la hora indicada dentro del rango de fechas.</small>
+                                                            <small class="text-muted d-block mt-2">Se enviará todos los días a la hora indicada dentro del rango de fechas.</small>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -570,10 +570,10 @@
                                                 <div class="col-12 d-none" id="schedule-custom">
                                                     <div class="row p-3">
                                                         <div class="col-12 mb-3">
-                                                            <label class="form-label" for="custom_type">Tipo de repeticion</label>
+                                                            <label class="form-label" for="custom_type">Tipo de repetición</label>
                                                             <select class="form-select" id="custom_type" name="custom_type">
                                                                 <option value="">Seleccione</option>
-                                                                <option value="every_n_days">Cada N dias</option>
+                                                                <option value="every_n_days">Cada N días</option>
                                                                 <option value="weekly">Semanal</option>
                                                                 <option value="monthly">Mensual</option>
                                                             </select>
@@ -593,14 +593,14 @@
                                                                     <label class="form-label" for="custom_start_n">Fecha inicio</label>
                                                                     <input type="date" class="form-control" id="custom_start_n" name="custom_start_n">
                                                                 </div>
-                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara cada <b>N</b> dias, desde la fecha inicio, a la hora indicada.</small></div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviará cada <b>N</b> días, desde la fecha inicio, a la hora indicada.</small></div>
                                                             </div>
                                                         </div>
 
                                                         <div class="col-12 d-none" id="custom-weekly">
                                                             <div class="row">
                                                                 <div class="col-12 mb-2">
-                                                                    <label class="form-label">Dias de la semana</label>
+                                                                    <label class="form-label">Días de la semana</label>
                                                                     <div class="d-flex flex-wrap gap-3">
                                                                         <label class="m-0"><input type="checkbox" value="1" name="custom_week_day[]" class="custom_week_day"> Lun</label>
                                                                         <label class="m-0"><input type="checkbox" value="2" name="custom_week_day[]" class="custom_week_day"> Mar</label>
@@ -623,14 +623,14 @@
                                                                     <label class="form-label" for="custom_week_end">Fecha fin (opcional)</label>
                                                                     <input type="date" class="form-control" id="custom_week_end" name="custom_week_end">
                                                                 </div>
-                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara en los dias seleccionados a la hora indicada (hasta la fecha fin si la defines).</small></div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviará en los días seleccionados a la hora indicada (hasta la fecha fin si la defines).</small></div>
                                                             </div>
                                                         </div>
 
                                                         <div class="col-12 d-none" id="custom-monthly">
                                                             <div class="row">
                                                                 <div class="col-md-4">
-                                                                    <label class="form-label" for="custom_month_day">Dia del mes</label>
+                                                                    <label class="form-label" for="custom_month_day">Día del mes</label>
                                                                     <input type="number" min="1" max="31" class="form-control" id="custom_month_day" name="custom_month_day">
                                                                 </div>
                                                                 <div class="col-md-4">
@@ -641,7 +641,7 @@
                                                                     <label class="form-label" for="custom_month_start">Fecha inicio</label>
                                                                     <input type="date" class="form-control" id="custom_month_start" name="custom_month_start">
                                                                 </div>
-                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviara cada mes el dia indicado a la hora indicada, desde la fecha inicio.</small></div>
+                                                                <div class="col-12 mt-2"><small class="text-muted">Se enviará cada mes el día indicado a la hora indicada, desde la fecha inicio.</small></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -657,7 +657,7 @@
                                 <div class="row justify-content-center">
                                     <div class="col-lg-8">
                                         <div class="text-center">
-                                            <div><h5 class="mb-5">Revision Mensaje</h5></div>
+                                            <div><h5 class="mb-5">Revisión Mensaje</h5></div>
                                             <div id="rev_content mt-2">
                                                 <div class="row">
                                                     <div class="col-6 pe-4">
@@ -685,7 +685,7 @@
                                                                     <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-card-text-outline"></i></span>
                                                                 </div>
                                                                 <div class="text-left">
-                                                                    <div><h5 class="font-size-13 mb-1">Contenido Aplicacion</h5></div>
+                                                                    <div><h5 class="font-size-13 mb-1">Contenido Aplicación</h5></div>
                                                                     <div><p class="text-muted mb-0 subtitle_input_text"></p></div>
                                                                 </div>
                                                             </li>
@@ -703,7 +703,7 @@
                                                                     <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-timetable"></i></span>
                                                                 </div>
                                                                 <div class="text-left">
-                                                                    <div><h5 class="font-size-13 mb-1">Programacion</h5></div>
+                                                                    <div><h5 class="font-size-13 mb-1">Programación</h5></div>
                                                                     <div><p class="text-muted mb-0 programacion_text"></p></div>
                                                                 </div>
                                                             </li>
@@ -741,6 +741,7 @@
 @push('scripts')
 <script>
     var tableData;
+    window.__HMNOTIFY_APP_ID = @json(session('AppNotify.idLocal'));
     // Endpoints expuestos por HMNotify (Laravel 12) - proxy hacia HMSrvAuth
     var postDispositivos            = "{{ route('api.dispositivos-alt') }}";
     var postDispositivosSendNew2    = "{{ route('wizard.send') }}";

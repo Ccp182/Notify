@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ExternalApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
@@ -47,14 +48,32 @@ class MessageController extends Controller
     {
         $appLocal = Session::get('AppNotify.idLocal');
 
-        $gruposResp = $this->api->cachedPost('Notify/getGrupoSubUsuario', ['app' => $appLocal], 1800);
-        $tiposResp  = $this->api->cachedPost('Notify/getTipoEntidad',     [],                     1800);
+        $gruposResp = $this->fetchCachedCatalog('Notify/getGrupoSubUsuario', ['app' => $appLocal], 'Groups',   1800);
+        $tiposResp  = $this->fetchCachedCatalog('Notify/getTipoEntidad',     [],                  'EntTypes', 1800);
 
         return view('notificationWizard2', [
             'pageTitle'       => 'Nueva notificacion',
             'listGroups'      => $gruposResp['Groups']   ?? [],
             'listTipoEntidad' => $tiposResp['EntTypes']  ?? [],
         ]);
+    }
+
+    /**
+     * Llama a un catalogo con cache; si llega vacio, invalida la key y reintenta
+     * una vez. Asi un null envenenado (por fallo transitorio) se auto-recupera
+     * en la siguiente carga sin necesidad de `php artisan cache:clear`.
+     */
+    private function fetchCachedCatalog(string $path, array $payload, string $dataKey, int $ttl): array
+    {
+        $resp = $this->api->cachedPost($path, $payload, $ttl) ?? [];
+
+        if (empty($resp[$dataKey])) {
+            $cacheKey = 'sso_api:'.strtoupper((string) Session::get('Pais', 'EC')).':post:'.md5($path.serialize($payload));
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+            $resp = $this->api->cachedPost($path, $payload, $ttl) ?? [];
+        }
+
+        return $resp;
     }
 
     /* =========================================================================
@@ -68,9 +87,10 @@ class MessageController extends Controller
     {
         $appLocal = Session::get('AppNotify.idLocal');
 
-        $response = $this->api->post('Notify/getDispoByApp', [
+        // Cache 120s por app - evita pegar HMSrvAuth en cada apertura del wizard.
+        $response = $this->api->cachedPost('Notify/getDispoByApp', [
             'app' => $appLocal,
-        ]);
+        ], 120);
 
         return response()->json($response ?? ['Error' => true, 'Mensaje' => 'No se pudo obtener dispositivos.']);
     }
@@ -83,34 +103,55 @@ class MessageController extends Controller
         $appLocal = Session::get('AppNotify.idLocal');
         $template = strtoupper((string) $request->input('template', 'NORMAL'));
 
-        if ($template === 'TEMPLATE') {
-            if ($request->filled('numList')) {
-                $response = $this->api->post('Notify/getDispoByNumero', [
-                    'numList'      => $request->input('numList'),
-                    'idAplicacion' => (string) $appLocal,
-                ]);
+        // TTL corto: los dispositivos cambian poco minuto a minuto; 120s es un balance.
+        $ttl = 120;
+
+        // Cacheamos el resultado YA MAPEADO (formato DataTable): evita re-procesar
+        // 35k filas en cada peticion. Key por app + payload exacto del request.
+        $payloadKey = [
+            'template'       => $template,
+            'numList'        => (string) $request->input('numList', ''),
+            'chasisList'     => (string) $request->input('chasisList', ''),
+            'motorList'      => (string) $request->input('motorList', ''),
+            'idTipoEnt'      => is_array($request->input('idTipoEnt'))  ? implode(',', $request->input('idTipoEnt'))  : (string) $request->input('idTipoEnt'),
+            'idSubGrupo'     => is_array($request->input('idSubGrupo')) ? implode(',', $request->input('idSubGrupo')) : (string) $request->input('idSubGrupo'),
+            'filtroTipoUser' => (int) $request->input('filtroTipoUser', 3),
+            'plataforma'     => (string) $request->input('plat', $request->input('plataforma', '')),
+        ];
+        $mappedKey = 'hmnotify:dispo_mapped:'.$appLocal.':'.md5(serialize($payloadKey));
+
+        $mapped = Cache::remember($mappedKey, $ttl, function () use ($request, $template, $appLocal, $ttl) {
+            if ($template === 'TEMPLATE') {
+                if ($request->filled('numList')) {
+                    $response = $this->api->cachedPost('Notify/getDispoByNumero', [
+                        'numList'      => $request->input('numList'),
+                        'idAplicacion' => (string) $appLocal,
+                    ], $ttl);
+                } else {
+                    $response = $this->api->cachedPost('Notify/getDispoByMotorChasis', [
+                        'chasisList'   => $request->input('chasisList', ''),
+                        'motorList'    => $request->input('motorList', ''),
+                        'idAplicacion' => (string) $appLocal,
+                    ], $ttl);
+                }
             } else {
-                $response = $this->api->post('Notify/getDispoByMotorChasis', [
-                    'chasisList'   => $request->input('chasisList', ''),
-                    'motorList'    => $request->input('motorList', ''),
-                    'idAplicacion' => (string) $appLocal,
-                ]);
+                $idTipoEnt  = $request->input('idTipoEnt');
+                $idSubGrupo = $request->input('idSubGrupo');
+                $plat       = $request->input('plat', $request->input('plataforma'));
+
+                $response = $this->api->cachedPost('Notify/getDispoUserByApp', [
+                    'app'            => $appLocal,
+                    'idTipoEnt'      => is_array($idTipoEnt)  ? implode(',', $idTipoEnt)  : $idTipoEnt,
+                    'idSubGrupo'     => is_array($idSubGrupo) ? implode(',', $idSubGrupo) : $idSubGrupo,
+                    'filtroTipoUser' => (int) $request->input('filtroTipoUser', 3),
+                    'plataforma'     => ($plat === 'TODOS' ? null : $plat),
+                ], $ttl);
             }
-        } else {
-            $idTipoEnt  = $request->input('idTipoEnt');
-            $idSubGrupo = $request->input('idSubGrupo');
-            $plat       = $request->input('plat', $request->input('plataforma'));
 
-            $response = $this->api->post('Notify/getDispoUserByApp', [
-                'app'            => $appLocal,
-                'idTipoEnt'      => is_array($idTipoEnt)  ? implode(',', $idTipoEnt)  : $idTipoEnt,
-                'idSubGrupo'     => is_array($idSubGrupo) ? implode(',', $idSubGrupo) : $idSubGrupo,
-                'filtroTipoUser' => (int) $request->input('filtroTipoUser', 3),
-                'plataforma'     => ($plat === 'TODOS' ? null : $plat),
-            ]);
-        }
+            return $this->mapDispositivosToDatatable($response, $appLocal);
+        });
 
-        return response()->json($this->mapDispositivosToDatatable($response, $appLocal));
+        return response()->json($mapped);
     }
 
     /**
