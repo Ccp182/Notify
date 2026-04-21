@@ -52,7 +52,7 @@ class MessageController extends Controller
         $tiposResp  = $this->fetchCachedCatalog('Notify/getTipoEntidad',     [],                  'EntTypes', 1800);
 
         return view('notificationWizard2', [
-            'pageTitle'       => 'Nueva notificacion',
+            'pageTitle'       => 'Nueva campana',
             'listGroups'      => $gruposResp['Groups']   ?? [],
             'listTipoEntidad' => $tiposResp['EntTypes']  ?? [],
         ]);

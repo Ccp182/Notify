@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '- Envío de Notificaciones')
+@section('title', '- Nueva Campaña')
 
 @php
     $primaryColor = config('app.primary_color') ?: session('AppNotify.color', '#556ee6');
@@ -49,7 +49,7 @@
     <div class="row h-100 ms-1">
 
         <div class="col-lg-12">
-            <h4 class="card-title mb-4">Envío de Notificaciones</h4>
+            <h4 class="card-title mb-4">Nueva Campaña</h4>
 
             <div id="progrss-wizard" class="twitter-bs-wizard">
 
@@ -58,7 +58,13 @@
                         <div class="block_nav"></div>
                         <ul class="twitter-bs-wizard-nav nav-justified">
                             <li class="nav-item active">
-                                <a href="#design" class="nav-link active" data-bs-toggle="tab">
+                                <a href="#campaign" class="nav-link active" data-bs-toggle="tab">
+                                    <span class="step-number"><i class="mdi mdi-bullhorn-outline"></i></span>
+                                    <span class="step-title">Campaña</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#design" class="nav-link" data-bs-toggle="tab">
                                     <span class="step-number"><i class="mdi mdi-card-text-outline"></i></span>
                                     <span class="step-title">Notificación</span>
                                 </a>
@@ -93,8 +99,44 @@
                     <div class="card-body">
                         <div class="tab-content twitter-bs-wizard-tab-content pt-1">
 
-                            {{-- STEP 1: DESIGN --}}
-                            <div class="tab-pane active show" id="design">
+                            {{-- STEP 1: CAMPAIGN (nombre + descripcion) --}}
+                            <div class="tab-pane active show" id="campaign">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-8">
+                                        <form id="campaignfrm" method="POST" class="form-horizontal">
+                                            @csrf
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Identificación de la campaña</h4>
+                                                </div>
+                                                <div class="col-12"><hr class="mt-2 mb-3"></div>
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="titleCampaing">Nombre de la campaña <span class="text-danger">*</span></label>
+                                                        <input class="form-control" type="text" id="titleCampaing" name="titleCampaing" required maxlength="100" placeholder="Ej: Promoción abril 2026">
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" for="subTitleCampaing">Descripción de la campaña <span class="text-danger">*</span></label>
+                                                        <textarea id="subTitleCampaing" class="form-control" name="subTitleCampaing" required maxlength="200" rows="3" placeholder="Describe el objetivo y alcance de esta campaña (máx. 200 caracteres)."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <small class="text-muted">
+                                                        <i class="mdi mdi-information-outline"></i>
+                                                        Este nombre y descripción aparecerán en el listado de campañas.
+                                                        Los siguientes pasos te guiarán para configurar el contenido de la notificación, el público objetivo y la programación de envío.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- STEP 2: DESIGN --}}
+                            <div class="tab-pane" id="design">
                                 <div class="row">
                                     <div class="col-lg-7">
                                         <form id="designfrm" method="POST" class="form-horizontal" data-bitwarden-watching="1">
@@ -297,8 +339,8 @@
                                                                     <div class="title_noti text-center mt-1">Título de la notificación</div>
                                                                     <div class="subTitle_noti text-center mt-1">Descripción de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal2 d-none">
@@ -307,8 +349,8 @@
                                                                     <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
                                                                     <div class="subTitle_noti text-left mt-2">Descripción de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal3 d-none">
@@ -320,8 +362,8 @@
                                                                     <img class="img_noti w-100" src="{{ asset('assets/images/Image-not-found.png') }}"/>
                                                                     <div class="title_noti text-center mt-1">Título de la notificación</div>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal5 d-none">
@@ -338,8 +380,8 @@
                                                                         </tr>
                                                                     </table>
                                                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
-                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver Más.</button></div>
+                                                                        <div class="button_noti button_noti_pri d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
+                                                                        <div class="button_noti button_noti_sec d-none"><button type="button" class="btn btn-secondary">Ver más</button></div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -386,7 +428,7 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-sm-12 col-md-8 col-lg-4 col-xl-3">
-                                                                <label class="col-form-label fw-bold">Grupos SubUsuarios</label>
+                                                                <label class="col-form-label fw-bold">Grupos de SubUsuarios</label>
                                                                 <select id="grupos" class="form-control select_grupos" multiple="multiple">
                                                                     @foreach (($listGroups ?? []) as $grupo)
                                                                         <option value="{{ $grupo['GroupId'] ?? ($grupo['IdGroup'] ?? '') }}" selected> - {{ $grupo['GroupName'] ?? ($grupo['Group'] ?? '') }}</option>
@@ -423,7 +465,7 @@
                                                             </div>
                                                             <div class="col-sm-3 col-lg-auto col-xl-auto text-right" style="text-align: right;padding-top:30px;">
                                                                 <a href="{{ asset('assets/templates/plantilla_chasis_motor.csv') }}" class="btn btn-success w-md" download>
-                                                                    <i class="mdi mdi-download"></i> Descargar plantilla Chasis Motor
+                                                                    <i class="mdi mdi-download"></i> Descargar plantilla Chasis/Motor
                                                                 </a>
                                                             </div>
                                                         </div>
@@ -487,25 +529,6 @@
                                 <form id="programationfrm" method="POST">
                                     @csrf
                                     <div class="row">
-                                        <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Campaña</h4></div>
-                                        <div class="col-12"><hr class="mt-2 mb-2"></div>
-                                        <div class="col-12">
-                                            <div class="row border rounded p-3 m-3 mb-3">
-                                                <div class="col-lg-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="titleCampaing">Título de la campaña</label>
-                                                        <input class="form-control" type="text" id="titleCampaing" name="titleCampaing" required maxlength="100">
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="subTitleCampaing">Descripción de la campaña</label>
-                                                        <textarea id="subTitleCampaing" class="form-control" name="subTitleCampaing" required maxlength="200" rows="3" placeholder="Este textarea tiene un límite de 200 caracteres."></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <div class="col"><h4 class="card-title mt-2 mb-0" style="font-weight: 800;">Programación</h4></div>
                                         <div class="col-12"><hr class="mt-2 mb-2"></div>
                                         <div class="col-12">
@@ -604,10 +627,10 @@
                                                                     <div class="d-flex flex-wrap gap-3">
                                                                         <label class="m-0"><input type="checkbox" value="1" name="custom_week_day[]" class="custom_week_day"> Lun</label>
                                                                         <label class="m-0"><input type="checkbox" value="2" name="custom_week_day[]" class="custom_week_day"> Mar</label>
-                                                                        <label class="m-0"><input type="checkbox" value="3" name="custom_week_day[]" class="custom_week_day"> Mie</label>
+                                                                        <label class="m-0"><input type="checkbox" value="3" name="custom_week_day[]" class="custom_week_day"> Mié</label>
                                                                         <label class="m-0"><input type="checkbox" value="4" name="custom_week_day[]" class="custom_week_day"> Jue</label>
                                                                         <label class="m-0"><input type="checkbox" value="5" name="custom_week_day[]" class="custom_week_day"> Vie</label>
-                                                                        <label class="m-0"><input type="checkbox" value="6" name="custom_week_day[]" class="custom_week_day"> Sab</label>
+                                                                        <label class="m-0"><input type="checkbox" value="6" name="custom_week_day[]" class="custom_week_day"> Sáb</label>
                                                                         <label class="m-0"><input type="checkbox" value="0" name="custom_week_day[]" class="custom_week_day"> Dom</label>
                                                                     </div>
                                                                 </div>
@@ -685,7 +708,7 @@
                                                                     <span class="avatar-title bg-primary-subtle text-primary rounded-circle"><i class="mdi mdi-card-text-outline"></i></span>
                                                                 </div>
                                                                 <div class="text-left">
-                                                                    <div><h5 class="font-size-13 mb-1">Contenido Aplicación</h5></div>
+                                                                    <div><h5 class="font-size-13 mb-1">Contenido de la Aplicación</h5></div>
                                                                     <div><p class="text-muted mb-0 subtitle_input_text"></p></div>
                                                                 </div>
                                                             </li>
@@ -759,10 +782,13 @@
 <script src="{{ asset('assets/libs/spectrum-colorpicker2/spectrum.min.js') }}"></script>
 <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
-<script src="{{ asset('assets/js/pages/form-wizard.init.js') }}"></script>
-<script src="{{ asset('assets/js/pages/form-advanced2.init.js') }}"></script>
-<script src="{{ asset('assets/js/notificationTable.init.js') }}"></script>
+@php
+    $jsVer = filemtime(public_path('assets/js/pages/form-advanced2.init.js'));
+@endphp
+<script src="{{ asset('assets/js/pages/form-wizard.init.js') }}?v={{ $jsVer }}"></script>
+<script src="{{ asset('assets/js/pages/form-advanced2.init.js') }}?v={{ $jsVer }}"></script>
+<script src="{{ asset('assets/js/notificationTable.init.js') }}?v={{ $jsVer }}"></script>
 
 <script src="{{ asset('assets/js/pages/multiple-select.min.js') }}"></script>
-<script src="{{ asset('assets/js/pages/datatableDispositivos.init.js') }}"></script>
+<script src="{{ asset('assets/js/pages/datatableDispositivos.init.js') }}?v={{ $jsVer }}"></script>
 @endpush

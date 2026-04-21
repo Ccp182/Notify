@@ -1,5 +1,5 @@
 // ----- Wizard helpers (Bootstrap 5 Tab API, sin depender del viejo bootstrapWizard) -----
-const WIZARD_STEPS = ['#design', '#audience', '#programation', '#revision'];
+const WIZARD_STEPS = ['#campaign', '#design', '#audience', '#programation', '#revision'];
 
 function wizardCurrentIndex() {
     var activeId = $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.active').attr('id')
@@ -639,10 +639,14 @@ $(document).on("click", '#progrss-wizard .next_custom', function (e) {
     // Detectar pestana activa
     var activeId = $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.active').attr('id')
                 || $('#progrss-wizard .twitter-bs-wizard-tab-content > .tab-pane.show').attr('id')
-                || 'design';
+                || 'campaign';
     console.log('[wizard] next_custom clicked, activeId=', activeId);
 
-    if (activeId === 'design') {
+    if (activeId === 'campaign') {
+        var formC = document.getElementById("campaignfrm");
+        if (!formC.checkValidity()) { formC.reportValidity(); return; }
+        wizardNext();
+    } else if (activeId === 'design') {
         var form = document.getElementById("designfrm");
         if (!form.checkValidity()) { form.reportValidity(); return; }
         // Inicializa DataTable (side effect); si falla, igual avanzamos
