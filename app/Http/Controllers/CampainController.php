@@ -44,11 +44,13 @@ class CampainController extends Controller
      *
      * El scope por usuario (createdBy) y el app se resuelven server-side:
      *   - createdBy: lo fuerza HMSrvAuth desde el token OAuth.
-     *   - app:       session('AppNotify.app_core') de la app seleccionada.
+     *   - app:       session('AppNotify.idLocal') de la app seleccionada
+     *                (consistente con MessageController@send que guarda
+     *                NotifyCampaign.App = idLocal al crear la campana).
      */
     public function list(Request $request): JsonResponse
     {
-        $appCore = Session::get('AppNotify.app_core');
+        $appCore = Session::get('AppNotify.idLocal');
 
         $payload = [
             'app'         => $appCore,
@@ -122,7 +124,7 @@ class CampainController extends Controller
         $fechaInicio = $request->input('fechaInicio') ?: date('Y-m-d', strtotime('-29 days'));
 
         return [
-            'app'         => Session::get('AppNotify.app_core'),
+            'app'         => Session::get('AppNotify.idLocal'),
             'fechaInicio' => $fechaInicio,
             'fechaFin'    => $fechaFin,
         ];
@@ -175,7 +177,7 @@ class CampainController extends Controller
      */
     public function kpis(): JsonResponse
     {
-        $appCore = Session::get('AppNotify.app_core');
+        $appCore = Session::get('AppNotify.idLocal');
 
         $resp  = $this->api->post('Notify/listarCampanas', ['app' => $appCore]) ?? [];
         $rows  = $resp['Campanas'] ?? [];
