@@ -14,6 +14,23 @@
     :root {
         --bs-primary: {{ $primary }};
     }
+
+    /* Backdrop sobre la imagen de fondo Nazox para mejor contraste con la card.
+       La clase authentication-bg del template carga assets/images/authentication-bg.jpg;
+       aqui le encimamos un velo oscuro + leve blur para que el selector luzca enfocado. */
+    body.authentication-bg.authentication-bg-pattern::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.55), rgba(17, 24, 39, 0.75));
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 0;
+        pointer-events: none;
+    }
+    body.authentication-bg.authentication-bg-pattern > * { position: relative; z-index: 1; }
+    .account-pages .card { box-shadow: 0 10px 35px rgba(0,0,0,0.25); }
+
     /* Ocultar banner por defecto de auth — usamos header HMSSO custom */
     .bg-login { display: none; }
     .card-body.pt-5 { padding-top: 1.5rem !important; }
