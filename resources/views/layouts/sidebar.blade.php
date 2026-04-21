@@ -12,9 +12,9 @@
                 </li>
 
                 <li>
-                    <a href="{{ route('wizard') }}" class="waves-effect {{ request()->routeIs('wizard') ? 'active' : '' }}">
-                        <i class="ri-mail-send-line"></i>
-                        <span>Nueva notificación</span>
+                    <a href="{{ route('campains.index') }}" class="waves-effect {{ request()->routeIs('campains.*') || request()->routeIs('wizard') ? 'active' : '' }}">
+                        <i class="mdi mdi-bullhorn-outline"></i>
+                        <span>Campañas</span>
                     </a>
                 </li>
 

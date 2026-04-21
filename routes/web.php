@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppSelectController;
+use App\Http\Controllers\CampainController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -46,4 +47,29 @@ Route::middleware(['sso', 'app.select'])->group(function () {
     Route::post('/api-proxy/dispositivos',     [MessageController::class, 'getDispositivos'])->name('api.dispositivos');
     Route::post('/api-proxy/dispositivos-alt', [MessageController::class, 'getDispositivosAlt'])->name('api.dispositivos-alt');
     Route::get('/api-proxy/catalogos',         [MessageController::class, 'getCatalogos'])->name('api.catalogos');
+
+    // Campanas (listado por usuario + KPIs dashboard)
+    Route::get('/campains',            [CampainController::class, 'index'])->name('campains.index');
+    Route::post('/campains/list',      [CampainController::class, 'list'])->name('campains.list');
+    Route::post('/campains/kpis',      [CampainController::class, 'kpis'])->name('campains.kpis');
+
+    // Dashboard HMNotify (resumen + serie diaria + top campanas)
+    Route::post('/dashboard/resumen',  [CampainController::class, 'dashboardResumen'])->name('dashboard.resumen');
+    Route::post('/dashboard/serie',    [CampainController::class, 'dashboardSerie'])->name('dashboard.serie');
+    Route::post('/dashboard/top',      [CampainController::class, 'dashboardTop'])->name('dashboard.top');
+    Route::post('/campains/metricas',  [CampainController::class, 'metricas'])->name('campains.metricas');
+    Route::post('/campains/detalle',   [CampainController::class, 'detalle'])->name('campains.detalle');
 });
+
+
+
+Route::get('/debug/token', function () {
+    dd([
+        'access_token' => session('access_token'),
+        'Pais'         => session('Pais'),
+        'FName'        => session('FName'),
+        'UCode'        => session('UCode'),
+        'url_me'       => rtrim(config('services.core_sso.base_uri'), '/')
+                          .'/api/'.session('Pais', 'EC').'/AuthSSO/me',
+    ]);
+})->middleware(\App\Http\Middleware\EnsureSsoTokenIsValid::class);
