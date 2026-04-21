@@ -8,17 +8,22 @@
     $logoSm       = $appIsoWhite  ?: ($appLogoWhite ?: ($appLogo ?: $fallbackSm));
     $logoLg       = $appLogoWhite ?: ($appLogo ?: $fallbackLg);
 @endphp
+<style>
+    .navbar-brand-box {
+        padding: 0 1rem !important;
+    }
+</style>
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="d-flex">
             <div class="navbar-brand-box">
                 <a href="{{ route('dashboard') }}" class="logo logo-dark">
-                    <span class="logo-sm"><img src="{{ $logoSm }}" alt="{{ $appName }}" height="22"></span>
-                    <span class="logo-lg"><img src="{{ $logoLg }}" alt="{{ $appName }}" height="28"></span>
+                    <span class="logo-sm"><img src="{{ $logoSm }}" alt="{{ $appName }}" height="45"></span>
+                    <span class="logo-lg"><img src="{{ $logoLg }}" alt="{{ $appName }}" height="50" style="margin-left: 25px;"></span>
                 </a>
                 <a href="{{ route('dashboard') }}" class="logo logo-light">
-                    <span class="logo-sm"><img src="{{ $logoSm }}" alt="{{ $appName }}" height="22"></span>
-                    <span class="logo-lg"><img src="{{ $logoLg }}" alt="{{ $appName }}" height="28"></span>
+                    <span class="logo-sm"><img src="{{ $logoSm }}" alt="{{ $appName }}" height="45"></span>
+                    <span class="logo-lg"><img src="{{ $logoLg }}" alt="{{ $appName }}" height="50" style="margin-left: 25px;"></span>
                 </a>
             </div>
 

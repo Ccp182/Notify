@@ -2,7 +2,7 @@
         // Favicon: app seleccionada -> favicon de la app; si no -> logo HMNotify.
         // Evita heredar el favicon generico de Nazox (public/assets/images/favicon.ico)
         // que es el que trae el template y luce como HMSSO.
-        $favicon = session('AppNotify.favicon') ?: asset('assets/images/logo-sm-dark.png');
+        $favicon = session('AppNotify.favicon') ?: 'https://res.24hm.net/General/HunterMonitoreo/Apps/favicon.ico';
     @endphp
     <link rel="shortcut icon" href="{{ $favicon }}">
     <link rel="icon" href="{{ $favicon }}">
