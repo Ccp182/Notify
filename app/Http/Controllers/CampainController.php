@@ -117,16 +117,24 @@ class CampainController extends Controller
     /**
      * Construye el payload comun del dashboard (filtros de periodo + app).
      * Defaults: ultimos 30 dias.
+     *
+     * idCampaigns: opcional, array de IDs. Lo enviamos como CSV al SP para
+     * no depender de TVPs (los SPs de dashboard usan split de VARCHAR).
      */
     private function dashboardPayload(Request $request): array
     {
         $fechaFin    = $request->input('fechaFin')    ?: date('Y-m-d');
         $fechaInicio = $request->input('fechaInicio') ?: date('Y-m-d', strtotime('-29 days'));
 
+        $ids = $request->input('idCampaigns', []);
+        if (!is_array($ids)) $ids = array_filter(explode(',', (string) $ids));
+        $ids = array_values(array_filter(array_map('intval', $ids), fn ($v) => $v > 0));
+
         return [
             'app'         => Session::get('AppNotify.idLocal'),
             'fechaInicio' => $fechaInicio,
             'fechaFin'    => $fechaFin,
+            'idCampaigns' => $ids ? implode(',', $ids) : null,
         ];
     }
 

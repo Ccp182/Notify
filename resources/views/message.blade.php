@@ -3,6 +3,19 @@
 @section('title', '| Dashboard')
 
 @push('css')
+<link href="{{ asset('assets/libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css">
+<style>
+    /* Select2 alineado con BS5 (alto ~31px del form-control-sm) */
+    .select2-container--default .select2-selection--multiple {
+        min-height: 31px; border-color: #ced4da; border-radius: .25rem; font-size: .8125rem;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: #86b7fe; box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #e7f1ff; border-color: #bbd6fe; color: #0d6efd;
+    }
+</style>
 <style>
     /* Tarjetas de KPI con bordes suaves y color en el numero */
     .kpi-card       { border: 1px solid #e9ecef; border-radius: .5rem; background: #fff; height: 100%; }
@@ -46,6 +59,13 @@
                             <i class="ri-refresh-line"></i> Aplicar
                         </button>
                         <small class="text-muted ms-auto" id="dbPeriodoLbl">-</small>
+                    </div>
+                    <div class="d-flex align-items-center flex-wrap mt-2" style="gap:.5rem;">
+                        <span class="text-muted small me-2"><i class="ri-bullseye-line me-1"></i> Campañas:</span>
+                        <select id="dbIdCampaigns" multiple class="form-select form-select-sm" style="min-width:320px; max-width:600px;"></select>
+                        <button type="button" id="btnDbLimpiarCampanas" class="btn btn-sm btn-light" title="Quitar filtro de campañas">
+                            <i class="ri-close-line"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -159,6 +179,8 @@
 
 @push('scripts')
 <script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<script src="{{ asset('assets/libs/select2/js/i18n/es.js') }}"></script>
 <script>
 $(function () {
     const csrf = $('meta[name="csrf-token"]').attr('content');
@@ -168,6 +190,7 @@ $(function () {
     let state = {
         fechaInicio: null,
         fechaFin:    null,
+        idCampaigns: [],
     };
 
     function toISO(d) { return d.toISOString().slice(0, 10); }
@@ -196,8 +219,13 @@ $(function () {
 
     // ---------- Carga de datos ----------
     function cargarDashboard() {
-        const payload = { fechaInicio: state.fechaInicio, fechaFin: state.fechaFin };
-        $('#dbPeriodoLbl').text('Período: ' + state.fechaInicio + ' a ' + state.fechaFin);
+        const payload = {
+            fechaInicio: state.fechaInicio,
+            fechaFin:    state.fechaFin,
+            idCampaigns: state.idCampaigns,
+        };
+        const sufijo = state.idCampaigns.length ? ' - ' + state.idCampaigns.length + ' campaña(s)' : '';
+        $('#dbPeriodoLbl').text('Período: ' + state.fechaInicio + ' a ' + state.fechaFin + sufijo);
 
         $.post('{{ route('dashboard.resumen') }}', payload).done(function (resp) {
             const r = resp.resumen || {};
@@ -372,12 +400,47 @@ $(function () {
         cargarDashboard();
     });
 
+    // ---------- Filtro multi-campana (Select2) ----------
+    // Cargamos las campanas del usuario una sola vez al abrir el dashboard.
+    // Si crea campanas nuevas, recargar la pagina basta (no pesa).
+    function initSelectCampanas() {
+        const $sel = $('#dbIdCampaigns');
+        $sel.select2({
+            language: 'es',
+            placeholder: 'Todas las campañas',
+            allowClear: true,
+            closeOnSelect: false,
+            width: 'resolve'
+        });
+
+        $.post('{{ route('campains.list') }}').done(function (resp) {
+            const rows = resp.data || [];
+            rows.forEach(function (r) {
+                if (!r.IdCampaign) return;
+                const opt = new Option(r.Name || ('#' + r.IdCampaign), r.IdCampaign, false, false);
+                $sel.append(opt);
+            });
+            $sel.trigger('change');
+        });
+
+        $sel.on('change', function () {
+            const vals = $(this).val() || [];
+            state.idCampaigns = vals.map(v => parseInt(v, 10)).filter(v => v > 0);
+            cargarDashboard();
+        });
+    }
+
+    $('#btnDbLimpiarCampanas').on('click', function () {
+        $('#dbIdCampaigns').val(null).trigger('change');
+    });
+
     // ---------- Inicializacion: 30 dias ----------
     const initial = rangoDias(30);
     state.fechaInicio = initial.fechaInicio;
     state.fechaFin    = initial.fechaFin;
     $('#dbFechaInicio').val(initial.fechaInicio);
     $('#dbFechaFin').val(initial.fechaFin);
+    initSelectCampanas();
     cargarDashboard();
 });
 </script>

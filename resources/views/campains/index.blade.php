@@ -175,10 +175,10 @@
                                         <label class="me-2 mb-0 small text-muted">Filtrar por estado:</label>
                                         <select id="filtroEstadoPush" class="form-select form-select-sm w-auto">
                                             <option value="">Todos</option>
-                                            <option value="APP">Pendiente (APP)</option>
-                                            <option value="SEN">Enviado (SEN)</option>
-                                            <option value="FIN">Confirmado (FIN)</option>
-                                            <option value="N">Fallido (N)</option>
+                                            <option value="APP">En cola</option>
+                                            <option value="SEN">Entregada</option>
+                                            <option value="FIN">Recibida</option>
+                                            <option value="N">No entregada</option>
                                         </select>
                                     </div>
 
@@ -187,16 +187,13 @@
                                         <table class="table table-sm table-striped mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>Min</th>
-                                                    <th>DId</th>
-                                                    <th>App</th>
-                                                    <th>Secuencia alerta</th>
-                                                    <th>Estado push</th>
-                                                    <th>Fecha push</th>
+                                                    <th>Celular</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tblDetalleEntregaBody">
-                                                <tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>
+                                                <tr><td colspan="3" class="text-center text-muted">Sin datos</td></tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -463,15 +460,12 @@ $(function () {
             var $body = $('#tblDetalleEntregaBody').empty();
 
             if (rows.length === 0) {
-                $body.append('<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>');
+                $body.append('<tr><td colspan="3" class="text-center text-muted">Sin datos</td></tr>');
             } else {
                 rows.forEach(function (r) {
                     $body.append(
                         '<tr>' +
                           '<td>' + (r.Min || '-') + '</td>' +
-                          '<td><code>' + (r.DId || '-') + '</code></td>' +
-                          '<td>' + (r.App || '-') + '</td>' +
-                          '<td>' + (r.SecuenciaAlerta || '-') + '</td>' +
                           '<td>' + badgeEstadoPush(r.EstadoPush) + '</td>' +
                           '<td>' + (r.FechaPush ? fmtFecha(r.FechaPush) : '-') + '</td>' +
                         '</tr>'
@@ -488,14 +482,17 @@ $(function () {
     }
 
     function badgeEstadoPush(e) {
-        // Paleta consistente con los KPIs del modal.
-        // APP=Pendiente (gris) / SEN=Enviado (celeste) / FIN=Confirmado (verde) / N|NOS=Fallido (rojo)
+        // Etiquetas orientadas al cliente final (no jerga tecnica de push):
+        //   APP -> En cola  (gris)
+        //   SEN -> Entregada (celeste)  -> llego al dispositivo, sin abrir
+        //   FIN -> Recibida  (verde)    -> el usuario abrio/confirmo
+        //   N|NOS -> No entregada (rojo)
         switch (e) {
-            case 'APP': return '<span class="badge bg-secondary">Pendiente</span>';
-            case 'SEN': return '<span class="badge bg-info">Enviado</span>';
-            case 'FIN': return '<span class="badge bg-success">Confirmado</span>';
+            case 'APP': return '<span class="badge bg-secondary">En cola</span>';
+            case 'SEN': return '<span class="badge bg-info">Entregada</span>';
+            case 'FIN': return '<span class="badge bg-success">Recibida</span>';
             case 'N':
-            case 'NOS': return '<span class="badge bg-danger">Fallido</span>';
+            case 'NOS': return '<span class="badge bg-danger">No entregada</span>';
             default:    return '<span class="badge bg-light text-dark">' + (e || 'Sin registro') + '</span>';
         }
     }
