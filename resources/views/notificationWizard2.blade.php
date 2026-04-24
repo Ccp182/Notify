@@ -543,7 +543,7 @@
                                                             </optgroup>
                                                             <optgroup label="Notificaciones Recurrentes">
                                                                 <option value="2">Diariamente</option>
-                                                                <option value="3">Personalizar (Próximamente)</option>
+                                                                <option value="3">Personalizar</option>
                                                             </optgroup>
                                                         </select>
                                                     </div>
@@ -598,7 +598,7 @@
                                                                 <option value="">Seleccione</option>
                                                                 <option value="every_n_days">Cada N días</option>
                                                                 <option value="weekly">Semanal</option>
-                                                                <option value="monthly">Mensual</option>
+                                                                <option value="monthly" disabled>Mensual (próximamente)</option>
                                                             </select>
                                                         </div>
 

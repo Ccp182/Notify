@@ -4,6 +4,8 @@
 
 @push('css')
     <link href="{{ asset('assets/libs/datatables.net-libs/DataTables-2.0.0/css/dataTables.dataTables.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/toastr/build/toastr.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
     <style>
         /* Ajustes propios del listado de campanas (heredan custom.css) */
@@ -69,6 +71,7 @@
                                     <th>Entrega</th>
                                     <th>Última actualización</th>
                                     <th>Creado por</th>
+                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                         </table>
@@ -219,6 +222,8 @@
 
 @push('scripts')
 <script src="{{ asset('assets/libs/datatables.net-libs/DataTables-2.0.0/js/dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
+<script src="{{ asset('assets/libs/toastr/build/toastr.min.js') }}"></script>
 <script>
 $(function () {
     const csrf = $('meta[name="csrf-token"]').attr('content');
@@ -340,8 +345,92 @@ $(function () {
             { data: null,                  defaultContent: '-', render: function (row, type, r) { return entregaCol(r); } },
             { data: 'UltimaActualizacion', defaultContent: '-', render: function (v) { return v ? fmtFecha(v) : '-'; } },
             { data: 'CreatedBy',           defaultContent: '-' },
+            {
+                data: null, orderable: false, searchable: false, className: 'text-end',
+                render: function (row, type, r) { return accionesCol(r); }
+            },
         ],
     });
+
+    // ================= Acciones por fila (pausar / reanudar / detener / eliminar) =================
+    // Reglas:
+    //   NOW                                          -> solo Eliminar
+    //   scheduled (ONCE sin correr)                  -> Detener, Eliminar
+    //   recurring (DAILY/CUSTOM activa)              -> Pausar, Detener, Eliminar
+    //   paused                                       -> Reanudar, Detener, Eliminar
+    //   queued, completed, stopped, cancelled, failed -> solo Eliminar
+    //
+    // Mapeo defensivo: si el SP no envia ScheduleStatus (version vieja),
+    // caemos a Estado (Spanish display) para al menos identificar terminales.
+    function normalizeStatus(row) {
+        var raw = String(row.ScheduleStatus || '').toLowerCase();
+        if (raw) return raw;
+        var disp = String(row.Estado || '').toLowerCase();
+        if (disp === 'completada')  return 'completed';
+        if (disp === 'cancelada')   return 'cancelled';
+        if (disp === 'programada')  return 'scheduled';
+        if (disp === 'enejecucion') return 'recurring';
+        if (disp === 'pausada')     return 'paused';
+        if (disp === 'detenida')    return 'stopped';
+        if (disp === 'fallida')     return 'failed';
+        return '';
+    }
+
+    function accionesCol(row) {
+        var st   = normalizeStatus(row);
+        var type = String(row.ScheduleType || '').toUpperCase();
+        var id   = row.IdCampaign;
+
+        // NOW nunca tiene lifecycle: se envio y se acabo.
+        if (type === 'NOW') {
+            return '<button class="btn btn-sm btn-outline-danger act-eliminar" data-id="'+id+'" title="Eliminar"><i class="ri-delete-bin-line"></i></button>';
+        }
+
+        var btns = [];
+
+        // Pausar aplica a ONCE programada (aplaza el unico run) y a DAILY/CUSTOM activas.
+        if (st === 'scheduled' || st === 'recurring') {
+            btns.push('<button class="btn btn-sm btn-outline-warning me-1 act-pausar"   data-id="'+id+'" title="Pausar"><i class="ri-pause-circle-line"></i></button>');
+        }
+        if (st === 'paused') {
+            btns.push('<button class="btn btn-sm btn-outline-success me-1 act-reanudar" data-id="'+id+'" title="Reanudar"><i class="ri-play-circle-line"></i></button>');
+        }
+        // Detener aplica solo a estados "vivos" (no queued, no terminales).
+        if (st === 'scheduled' || st === 'recurring' || st === 'paused') {
+            btns.push('<button class="btn btn-sm btn-outline-secondary me-1 act-detener" data-id="'+id+'" title="Detener para siempre"><i class="ri-stop-circle-line"></i></button>');
+        }
+        btns.push('<button class="btn btn-sm btn-outline-danger act-eliminar" data-id="'+id+'" title="Eliminar"><i class="ri-delete-bin-line"></i></button>');
+
+        return btns.join('');
+    }
+
+    function lifecycleAction(url, idCampaign, confirmText) {
+        Swal.fire({
+            title: confirmText,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Si, continuar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d9534f'
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            $.post(url, { idCampaign: idCampaign, _token: '{{ csrf_token() }}' })
+             .done(function (resp) {
+                if (resp && resp.Error) {
+                    toastr.error(resp.Message || 'Error');
+                } else {
+                    toastr.success(resp.Message || 'Listo');
+                    $('#tblCampanas').DataTable().ajax.reload(null, false);
+                }
+             })
+             .fail(function () { toastr.error('Error de red'); });
+        });
+    }
+
+    $(document).on('click', '.act-pausar',   function () { lifecycleAction('{{ route('campains.pausar') }}',   $(this).data('id'), 'Pausar la campaña?'); });
+    $(document).on('click', '.act-reanudar', function () { lifecycleAction('{{ route('campains.reanudar') }}', $(this).data('id'), 'Reanudar la campaña?'); });
+    $(document).on('click', '.act-detener',  function () { lifecycleAction('{{ route('campains.detener') }}',  $(this).data('id'), 'Detener la campaña para siempre?'); });
+    $(document).on('click', '.act-eliminar', function () { lifecycleAction('{{ route('campains.eliminar') }}', $(this).data('id'), 'Eliminar la campaña? Esta accion cancela todos los envios pendientes.'); });
 
     // ================= Drill-down: abrir modal con metricas + detalle =================
     var currentIdCampaign = null;

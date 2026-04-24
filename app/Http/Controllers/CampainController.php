@@ -208,4 +208,23 @@ class CampainController extends Controller
             'ultimaFecha'  => $ultimaFecha,
         ]);
     }
+
+    /* ---------------------------------------------------------------
+     * Lifecycle (proxy a HMSrvAuth)
+     * -------------------------------------------------------------*/
+
+    private function lifecycle(Request $request, string $endpoint): JsonResponse
+    {
+        $idCampaign = (int) $request->input('idCampaign', 0);
+        if ($idCampaign <= 0) {
+            return response()->json(['Error' => 1, 'Message' => 'idCampaign invalido'], 422);
+        }
+        $resp = $this->api->post('Notify/' . $endpoint, ['idCampaign' => $idCampaign]) ?? [];
+        return response()->json($resp);
+    }
+
+    public function pausar  (Request $r): JsonResponse { return $this->lifecycle($r, 'pausarCampana');   }
+    public function reanudar(Request $r): JsonResponse { return $this->lifecycle($r, 'reanudarCampana'); }
+    public function detener (Request $r): JsonResponse { return $this->lifecycle($r, 'detenerCampana');  }
+    public function eliminar(Request $r): JsonResponse { return $this->lifecycle($r, 'eliminarCampana'); }
 }

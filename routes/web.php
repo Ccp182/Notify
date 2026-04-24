@@ -59,6 +59,12 @@ Route::middleware(['sso', 'app.select'])->group(function () {
     Route::post('/dashboard/top',      [CampainController::class, 'dashboardTop'])->name('dashboard.top');
     Route::post('/campains/metricas',  [CampainController::class, 'metricas'])->name('campains.metricas');
     Route::post('/campains/detalle',   [CampainController::class, 'detalle'])->name('campains.detalle');
+
+    // Lifecycle de campanas
+    Route::post('/campains/pausar',    [CampainController::class, 'pausar'])->name('campains.pausar');
+    Route::post('/campains/reanudar',  [CampainController::class, 'reanudar'])->name('campains.reanudar');
+    Route::post('/campains/detener',   [CampainController::class, 'detener'])->name('campains.detener');
+    Route::post('/campains/eliminar',  [CampainController::class, 'eliminar'])->name('campains.eliminar');
 });
 
 

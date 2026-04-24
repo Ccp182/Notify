@@ -540,10 +540,10 @@ $(document).ready(function() {
                         confirmButtonColor: "#47bd9a",
                         confirmButtonText: 'Aceptar',
                     }).then((result) => {
-                        if (result.isConfirmed) {
-                            if(!response.error){
-                                $("#designfrm").reset();
-                            }
+                        if (result.isConfirmed && !response.error) {
+                            // Campana creada OK: llevar al listado para que el
+                            // usuario vea su campana recien publicada.
+                            window.location.href = '/campains';
                         }
                     });
                 },
@@ -1073,29 +1073,30 @@ function buildCustomRuleJson() {
 
     if (!type) return;
 
-    // =========================
-    // Cada N días
-    // =========================
+    // Formato del JSON: lo que consume RecurrenceCalculator.php en el backend.
+    //   interval : { type:"interval", everyDays:N, time:"HH:MM", start:"YYYY-MM-DD", endAt:"YYYY-MM-DD"|null }
+    //   weekly   : { type:"weekly",   days:[0..6],   time:"HH:MM", start:"YYYY-MM-DD", endAt:"YYYY-MM-DD"|null }
+    // "start" lo agrega el cliente (no lo usa el calculator, pero el SP lo
+    // usa para el primer NextRunAt). "endAt" es la fecha de corte de la serie.
+
     if (type === 'every_n_days') {
         const n     = Number($('#custom_every_n').val());
         const time  = $('#custom_time_n').val();      // "HH:MM"
         const start = $('#custom_start_n').val();     // "YYYY-MM-DD"
 
         rule = {
-        freq: 'every_n_days',
-        n: n,
-        time: time,
-        start: start
+            type: 'interval',
+            everyDays: n,
+            time: time,
+            start: start,
+            endAt: null
         };
     }
 
-    // =========================
-    // Semanal
-    // =========================
     if (type === 'weekly') {
         const days = [];
         $('.custom_week_day:checked').each(function () {
-        days.push(Number(this.value)); // 0..6 (Dom..Sab) según tu value
+            days.push(Number(this.value)); // 0=Dom .. 6=Sab (coincide con Carbon::dayOfWeek)
         });
 
         const time  = $('#custom_week_time').val();
@@ -1103,28 +1104,19 @@ function buildCustomRuleJson() {
         const end   = $('#custom_week_end').val() || null;
 
         rule = {
-        freq: 'weekly',
-        days: days,
-        time: time,
-        start: start,
-        end: end
+            type: 'weekly',
+            days: days,
+            time: time,
+            start: start,
+            endAt: end
         };
     }
 
-    // =========================
-    // Mensual
-    // =========================
+    // Monthly todavia no esta soportado por RecurrenceCalculator.
+    // Si el usuario lo elige, dejamos custom_rule_json_h vacio para que
+    // la validacion del SP rebote el envio.
     if (type === 'monthly') {
-        const day   = Number($('#custom_month_day').val()); // 1..31
-        const time  = $('#custom_month_time').val();
-        const start = $('#custom_month_start').val();
-
-        rule = {
-        freq: 'monthly',
-        day: day,
-        time: time,
-        start: start
-        };
+        rule = null;
     }
 
     // Guarda JSON (si existe)
