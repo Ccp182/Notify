@@ -16,6 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'sso'         => \App\Http\Middleware\EnsureSsoTokenIsValid::class,
             'app.select'  => \App\Http\Middleware\EnsureAppSelected::class,
         ]);
+
+        // Single Logout: la cookie hm_sso es compartida en .24hm.net y la
+        // setea HMSrvAuth con su APP_KEY. Si la encriptamos aqui con nuestro
+        // APP_KEY rompemos el flujo. Se mantiene como plaintext (UUID opaco).
+        $middleware->encryptCookies(except: [
+            'hm_sso',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

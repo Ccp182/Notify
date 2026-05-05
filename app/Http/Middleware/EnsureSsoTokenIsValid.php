@@ -28,7 +28,20 @@ class EnsureSsoTokenIsValid
 
         if (!$accessToken || ($expiresAt && now()->greaterThan($expiresAt))) {
             $this->clearSession($request);
-            return redirect()->route('login');
+            return $this->bounceToLogin($request);
+        }
+
+        // Single Logout via cookie compartida .24hm.net/hm_sso.
+        // Si el sso_session_id de la cookie difiere del que guardamos al
+        // login, significa que el usuario cerro sesion en otro tab/app
+        // (o expiro la sesion central). Forzamos logout local de inmediato.
+        $cookieSso = $request->cookie('hm_sso');
+        $storedSso = Session::get('sso_session_id');
+        if ($storedSso) {
+            if (!$cookieSso || $cookieSso !== $storedSso) {
+                $this->clearSession($request);
+                return $this->bounceToLogin($request);
+            }
         }
 
         // Validar contra /me solo en GETs no-Ajax, con cache de 60s
@@ -59,7 +72,7 @@ class EnsureSsoTokenIsValid
                         'country' => $country,
                     ]);
                     $this->clearSession($request);
-                    return redirect()->route('login');
+                    return $this->bounceToLogin($request);
                 }
 
                 $userData = $response->json();
@@ -95,5 +108,22 @@ class EnsureSsoTokenIsValid
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         Session::flush();
+    }
+
+    /**
+     * Redirect al login. Para peticiones Ajax/JSON devuelve 401 con la
+     * URL de login para que el interceptor del frontend redirija el
+     * navegador. Esto evita ver "datos rotos" tras un Single Logout.
+     */
+    private function bounceToLogin(Request $request): Response
+    {
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'ok'        => false,
+                'message'   => 'Sesion expirada',
+                'login_url' => route('login'),
+            ], 401);
+        }
+        return redirect()->route('login');
     }
 }

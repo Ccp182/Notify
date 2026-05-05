@@ -81,21 +81,33 @@ class SSOController extends Controller
         $country = strtoupper((string) $request->query('country', 'EC'));
         Session::put('Pais', $country);
 
+        // sso_session_id de la sesion SSO compartida (cookie .24hm.net/hm_sso).
+        // Llega como query desde HMSrvAuth (AppendCountryToOAuthRedirect) y se
+        // reenvia al POST /oauth/token para que el servidor pueda tagear el
+        // access_token y soportar Single Logout (revocar SOLO los tokens de
+        // esta sesion al hacer logout).
+        $hmSso = (string) $request->query('hm_sso', '');
+        if ($hmSso !== '') {
+            Session::put('sso_session_id', $hmSso);
+        }
+
         $config = config('services.core_sso');
 
         // Intercambiar code por access_token. OBLIGATORIO mandar country
         // en el body para que DomainMiddleware del servidor SSO seleccione
-        // la BD correcta donde vive el auth_code.
+        // la BD correcta donde vive el auth_code. hm_sso permite tagear
+        // el token con la sesion SSO para Single Logout.
         $tokenResponse = Http::asForm()->post(
             rtrim($config['base_uri'], '/').'/oauth/token',
-            [
+            array_filter([
                 'grant_type'    => 'authorization_code',
                 'client_id'     => $config['client_id'],
                 'client_secret' => $config['client_secret'],
                 'redirect_uri'  => $config['redirect'],
                 'code'          => $code,
                 'country'       => $country,
-            ]
+                'hm_sso'        => $hmSso !== '' ? $hmSso : null,
+            ], fn ($v) => $v !== null)
         );
 
         if (!$tokenResponse->ok()) {
