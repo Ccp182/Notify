@@ -51,25 +51,18 @@
                 </button>
             </div>
 
-            <div class="dropdown d-inline-block user-dropdown">
-                <button type="button" class="btn header-item waves-effect" data-bs-toggle="dropdown">
-                    <img class="rounded-circle header-profile-user me-1" src="{{ asset('assets/images/users/avatar-1.jpg') }}" alt="">
-                    <span class="d-none d-xl-inline-block ms-1">{{ session('FName', session('User', 'Usuario')) }}</span>
-                    <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
-                </button>
-                <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="{{ route('select-app.show') }}">
-                        <i class="ri-apps-2-line align-middle me-1"></i> Cambiar app
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <form method="POST" action="{{ route('logout') }}" class="m-0">
-                        @csrf
-                        <button type="submit" class="dropdown-item">
-                            <i class="ri-shut-down-line align-middle me-1 text-danger"></i> Cerrar sesión
-                        </button>
-                    </form>
-                </div>
-            </div>
+            {{-- App Launcher SSO (waffle) - apps a las que el usuario tiene acceso --}}
+            <x-sso-app-launcher />
+
+            {{-- Account Menu - avatar con iniciales + dropdown estilo Google.
+                 El item "Cambiar app" (selector multi-tenant de Notify) vive
+                 DENTRO del dropdown del avatar, arriba de "Cerrar sesion".
+                 Color dinamico: si la app de Notify tiene color lo usamos; sino azul Nazox. --}}
+            @php
+                $ssoMenuColor = session('AppNotify.color') ?: '#556ee6';
+                $ssoMenuProfileUrl = rtrim(config('services.core_sso.base_uri', 'https://auth.24hm.net'), '/').'/profile';
+            @endphp
+            <x-sso-account-menu :color="$ssoMenuColor" :profile-url="$ssoMenuProfileUrl" />
         </div>
     </div>
 </header>

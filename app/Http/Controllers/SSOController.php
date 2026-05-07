@@ -146,11 +146,34 @@ class SSOController extends Controller
             Session::put('User',        $userData['User']    ?? null);
             Session::put('CatCode',     $userData['CatCode'] ?? null);
             Session::put('UserCountry', $userData['Country'] ?? null);  // pais del PERFIL (informativo)
+            // Mail (primer email) - usado por sso-account-menu component
+            Session::put('Mail',        $userData['Mail']    ?? null);
             Session::put('user',        $userData);
             // NO HACER: Session::put('Pais', $userData['Country']);
         } else {
             Log::warning('SSO: No se pudo obtener /api/{country}/AuthSSO/me', [
                 'status'  => $userResponse->status(),
+                'country' => $country,
+            ]);
+        }
+
+        // Cargar apps del usuario para el waffle / app launcher.
+        try {
+            $appsResponse = Http::withToken($accessToken)
+                ->acceptJson()
+                ->get(rtrim($config['base_uri'], '/').'/api/'.$country.'/AuthSSO/apps');
+            if ($appsResponse->ok()) {
+                Session::put('SsoApps', $appsResponse->json('Apps') ?? []);
+            } else {
+                Log::warning('SSO: No se pudo cargar /AuthSSO/apps en callback', [
+                    'status'  => $appsResponse->status(),
+                    'body'    => substr((string) $appsResponse->body(), 0, 500),
+                    'country' => $country,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SSO: excepcion al cargar /AuthSSO/apps en callback', [
+                'message' => $e->getMessage(),
                 'country' => $country,
             ]);
         }

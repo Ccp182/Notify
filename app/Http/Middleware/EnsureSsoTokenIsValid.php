@@ -81,9 +81,33 @@ class EnsureSsoTokenIsValid
                 Session::put('FName',       $userData['FName']   ?? Session::get('FName'));
                 Session::put('User',        $userData['User']    ?? Session::get('User'));
                 Session::put('UserCountry', $userData['Country'] ?? Session::get('UserCountry'));
+                // Mail (primer email) - usado por sso-account-menu component
+                Session::put('Mail',        $userData['Mail']    ?? Session::get('Mail'));
                 Session::put('user',        $userData);
                 Session::put('sso_last_check', now());
                 // NO HACER: Session::put('Pais', $userData['Country']);
+
+                // Refrescar lista de apps del usuario (waffle / app launcher).
+                try {
+                    $appsResponse = Http::withToken($accessToken)
+                        ->acceptJson()
+                        ->withoutRedirecting()
+                        ->timeout(10)
+                        ->get(rtrim($config['base_uri'], '/').'/api/'.$country.'/AuthSSO/apps');
+                    if ($appsResponse->ok()) {
+                        Session::put('SsoApps', $appsResponse->json('Apps') ?? []);
+                    } else {
+                        Log::warning('SSO: /AuthSSO/apps respondio con error en revalidacion', [
+                            'status'  => $appsResponse->status(),
+                            'body'    => substr((string) $appsResponse->body(), 0, 500),
+                            'country' => $country,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('SSO: excepcion al refrescar /AuthSSO/apps', [
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
@@ -98,6 +122,7 @@ class EnsureSsoTokenIsValid
     {
         view()->share('FName',      Session::get('FName'));
         view()->share('User',       Session::get('User'));
+        view()->share('Mail',       Session::get('Mail'));
         view()->share('Pais',       Session::get('Pais'));
         view()->share('AppNotify',  Session::get('AppNotify'));
         return $response;
