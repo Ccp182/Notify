@@ -22,6 +22,11 @@ use Illuminate\Support\Str;
  */
 class SSOController extends Controller
 {
+    // Reenvía IP + UserAgent del usuario final al SSO. Aquí importa especialmente:
+    // son las llamadas del callback de login, justo el evento que un auditor
+    // querría poder atribuir a una IP real.
+    use \App\Support\ReenviaIdentidadCliente;
+
     /**
      * Redirige al /oauth/authorize de HMSrvAuth para iniciar el flujo SSO.
      */
@@ -135,6 +140,7 @@ class SSOController extends Controller
 
         // Obtener perfil del usuario usando el MISMO country de routing
         $userResponse = Http::withToken($accessToken)
+            ->withHeaders($this->cabecerasCliente())
             ->acceptJson()
             ->get(rtrim($config['base_uri'], '/').'/api/'.$country.'/AuthSSO/me');
 
@@ -160,6 +166,7 @@ class SSOController extends Controller
         // Cargar apps del usuario para el waffle / app launcher.
         try {
             $appsResponse = Http::withToken($accessToken)
+                ->withHeaders($this->cabecerasCliente())
                 ->acceptJson()
                 ->get(rtrim($config['base_uri'], '/').'/api/'.$country.'/AuthSSO/apps');
             if ($appsResponse->ok()) {

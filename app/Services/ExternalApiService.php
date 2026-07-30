@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Session;
  */
 class ExternalApiService
 {
+    // Reenvía IP + UserAgent del usuario final al SSO (bitácora de actividad).
+    use \App\Support\ReenviaIdentidadCliente;
+
     protected function baseUri(): string
     {
         return rtrim(config('services.core_sso.base_uri', ''), '/');
@@ -35,7 +38,11 @@ class ExternalApiService
 
     protected function client(): PendingRequest
     {
+        // Todas las llamadas al SSO pasan por aquí (get/post y sus variantes
+        // cacheadas), así que las cabeceras de identidad se agregan en un solo
+        // punto y ninguna llamada queda sin ellas.
         return Http::withToken(Session::get('access_token'))
+            ->withHeaders($this->cabecerasCliente())
             ->acceptJson()
             ->asJson()
             ->timeout(30)

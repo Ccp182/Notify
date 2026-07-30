@@ -21,6 +21,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureSsoTokenIsValid
 {
+    // Reenvía IP + UserAgent del usuario final al SSO: estas llamadas (/me y
+    // /apps) también quedan en la bitácora y sin esto registrarían la IP del
+    // servidor y "GuzzleHttp/7".
+    use \App\Support\ReenviaIdentidadCliente;
+
     public function handle(Request $request, Closure $next): Response
     {
         $accessToken = Session::get('access_token');
@@ -54,6 +59,7 @@ class EnsureSsoTokenIsValid
 
                 try {
                     $response = Http::withToken($accessToken)
+                        ->withHeaders($this->cabecerasCliente())
                         ->acceptJson()
                         ->withoutRedirecting()
                         ->timeout(10)
@@ -90,6 +96,7 @@ class EnsureSsoTokenIsValid
                 // Refrescar lista de apps del usuario (waffle / app launcher).
                 try {
                     $appsResponse = Http::withToken($accessToken)
+                        ->withHeaders($this->cabecerasCliente())
                         ->acceptJson()
                         ->withoutRedirecting()
                         ->timeout(10)
