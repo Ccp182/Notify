@@ -22,6 +22,42 @@ use Illuminate\Support\Str;
  */
 class SSOController extends Controller
 {
+
+    /** Cuantos state pendientes se aceptan a la vez y cuantos segundos vive cada uno. */
+    private const STATES_MAX = 5;
+    private const STATE_TTL  = 600;
+
+    /** Los state pendientes que no vencieron, del mas viejo al mas nuevo: [state => timestamp]. */
+    private function statesVigentes(): array
+    {
+        $min = time() - self::STATE_TTL;
+        return array_filter((array) Session::get('oauth_states', []),
+            fn ($t, $s) => is_string($s) && is_int($t) && $t >= $min, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /** true si $state es uno de los pendientes; lo borra (un solo uso). Comparacion en tiempo constante. */
+    private function consumirState(string $state): bool
+    {
+        if ($state === '') {
+            return false;
+        }
+        // Login empezado antes del despliegue (clave vieja de un solo state).
+        $viejo = (string) Session::pull('oauth_state', '');
+        if ($viejo !== '' && hash_equals($viejo, $state)) {
+            return true;
+        }
+        $states = $this->statesVigentes();
+        $ok = false;
+        foreach (array_keys($states) as $s) {
+            if (hash_equals($s, $state)) {
+                unset($states[$s]);
+                $ok = true;
+                break;
+            }
+        }
+        Session::put('oauth_states', $states);
+        return $ok;
+    }
     // Reenvía IP + UserAgent del usuario final al SSO. Aquí importa especialmente:
     // son las llamadas del callback de login, justo el evento que un auditor
     // querría poder atribuir a una IP real.
@@ -46,7 +82,12 @@ class SSOController extends Controller
 
         $config = config('services.core_sso');
         $state  = Str::random(40);
-        Session::put('oauth_state', $state);
+        // Varias pestanas que vuelven al login a la vez (sesion vencida, cambio de usuario) se
+        // pisaban el unico state y todas menos la ultima fallaban. Se guardan los ultimos
+        // STATES_MAX, cada uno de un solo uso y con vencimiento (mismo arreglo que HMAnubis 2ec66d4).
+        $states = $this->statesVigentes();
+        $states[$state] = time();
+        Session::put('oauth_states', array_slice($states, -self::STATES_MAX, null, true));
 
         $query = http_build_query([
             'client_id'     => $config['client_id'],
@@ -71,10 +112,13 @@ class SSOController extends Controller
         $code  = $request->query('code');
 
         // Validar state para prevenir CSRF
-        if (!$state || $state !== Session::get('oauth_state')) {
+        if (!$this->consumirState((string) $state)) {
+            // Otra pestana ya completo el login con su propio state: esta solo llega tarde.
+            if (Session::has('access_token')) {
+                return redirect()->route('local');
+            }
             abort(403, 'Estado OAuth invalido.');
         }
-        Session::forget('oauth_state');
 
         if (!$code) {
             return redirect()->route('login')
