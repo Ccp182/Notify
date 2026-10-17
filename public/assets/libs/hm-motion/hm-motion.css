@@ -1,0 +1,92 @@
+/* =========================================================================
+   hm-motion.css — movimiento sutil común del ecosistema SSO (Hunter Monitoreo)
+   Original en SSO/hm-motion; se copia a cada app igual que hm-icons.
+   Decidido por Carlos (artifact JtSeEJFyzky7YF2uyZ2edH, 16-oct-2026). La referencia es el Resumen de Anubis.
+
+   Reglas:
+   - Se anima la llegada de cosas: tarjetas, bloques y números. Nunca filas de DataTables, marcadores ni
+     nada que se repinte solo (tick, poll, auto-refresh).
+   - Entrada con ease-out, spinner lineal y duraciones como tokens (no un único valor para todo).
+   - Con prefers-reduced-motion todo se apaga y el dato aparece directo.
+   Clases: hm-m-entra · hm-m-skel · hm-m-hover · hm-m-barra · hm-m-gira · hm-m-fade · hm-m-ocupado
+   ========================================================================= */
+:root {
+    --hm-m-dur-entra: .38s;          /* entrada de tarjetas y bloques */
+    --hm-m-dur-rapida: .2s;          /* hover, cambios de estado */
+    --hm-m-dur-fade: .18s;           /* fundido de pestañas */
+    --hm-m-dur-barra: .45s;          /* medidores que crecen */
+    --hm-m-ease: cubic-bezier(.2, .7, .3, 1);   /* desacelera al llegar */
+    --hm-m-escalon: 40ms;            /* retardo entre elementos de una cascada */
+    --hm-m-skel: #e9ecf1;
+    --hm-m-skel-2: rgba(255, 255, 255, .75);
+    --hm-m-sombra: 0 6px 18px rgba(15, 23, 42, .12);
+}
+/* Temas oscuros del ecosistema: Anubis y GF usan data-tema; Nazox y Bootstrap usan sus atributos */
+html[data-tema="oscuro"], [data-bs-theme="dark"], [data-layout-mode="dark"], [data-theme="dark"] {
+    --hm-m-skel: #2a303d;
+    --hm-m-skel-2: rgba(255, 255, 255, .07);
+    --hm-m-sombra: 0 6px 18px rgba(0, 0, 0, .45);
+}
+
+/* P1 · entrada escalonada: style="--i:N" (o HMMotion.entrar) fija el orden */
+.hm-m-entra {
+    animation: hm-m-entra var(--hm-m-dur-entra) var(--hm-m-ease) backwards;   /* backwards: no fija transform al terminar, así el hover puede elevar */
+    animation-delay: calc(var(--i, 0) * var(--hm-m-escalon));
+}
+@keyframes hm-m-entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* P2 · skeleton con brillo; reserva el alto para que nada salte al llegar el dato */
+.hm-m-skel {
+    position: relative; overflow: hidden; display: block;
+    background: var(--hm-m-skel); border-radius: 6px; color: transparent !important;
+    min-height: 1em;
+}
+.hm-m-skel > * { visibility: hidden; }
+.hm-m-skel::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--hm-m-skel-2), transparent);
+    animation: hm-m-brillo 1.3s ease-in-out infinite;
+}
+.hm-m-skel.hm-m-skel-num { width: 70%; height: 1.6em; }
+.hm-m-skel.hm-m-skel-txt { width: 85%; height: .9em; }
+@keyframes hm-m-brillo { to { transform: translateX(100%); } }
+
+/* P6 · hover de tarjeta, solo con puntero real (en táctil no queda "pegado") */
+.hm-m-hover { transition: box-shadow var(--hm-m-dur-rapida) ease, transform var(--hm-m-dur-rapida) ease; }
+@media (hover: hover) {
+    .hm-m-hover:hover { box-shadow: var(--hm-m-sombra); transform: translateY(-2px); }
+}
+
+/* P4 · barra o medidor que crece: se fija el width desde JS después del primer frame */
+.hm-m-barra { transition: width var(--hm-m-dur-barra) ease-out; }
+
+/* Spinner de carga (lineal: velocidad constante) */
+.hm-m-gira { display: inline-block; animation: hm-m-giro .9s linear infinite; }
+@keyframes hm-m-giro { to { transform: rotate(360deg); } }
+
+/* Fundido corto al cambiar de pestaña o de contenido */
+.hm-m-fade { animation: hm-m-fade var(--hm-m-dur-fade) ease-out both; }
+@keyframes hm-m-fade { from { opacity: 0; } }
+
+/* Zona ocupada (R5): bloquea la interacción en el reporte que carga, sin oscurecer la pantalla.
+   HMMotion.ocupar(zona, true) pone esta clase, aria-busy y deshabilita botones e inputs. */
+.hm-m-ocupado { position: relative; }
+.hm-m-ocupado > :not(.hm-m-ocupado-ind) { opacity: .5; transition: opacity var(--hm-m-dur-rapida) ease; }
+.hm-m-ocupado::after { content: ""; position: absolute; inset: 0; z-index: 20; cursor: progress; }   /* captura los clics */
+.hm-m-ocupado-ind {
+    position: absolute; z-index: 21; top: 1rem; left: 50%; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .85rem;
+    border-radius: 99px; background: var(--bs-body-bg, #fff); color: var(--bs-body-color, #343a40);
+    box-shadow: var(--hm-m-sombra); font-size: .85rem; font-weight: 500; pointer-events: none;
+    animation: hm-m-fade var(--hm-m-dur-rapida) ease-out both;
+}
+
+/* P9 · movimiento reducido: todo directo */
+@media (prefers-reduced-motion: reduce) {
+    .hm-m-entra, .hm-m-fade, .hm-m-ocupado-ind { animation: none; opacity: 1; transform: none; }
+    .hm-m-skel::after, .hm-m-gira { animation: none; }
+    .hm-m-hover, .hm-m-barra, .hm-m-ocupado > * { transition: none; }
+    .hm-m-hover:hover { transform: none; }
+    /* red de seguridad global para animaciones propias de cada app */
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
