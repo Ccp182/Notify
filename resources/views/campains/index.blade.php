@@ -20,7 +20,7 @@
     {{-- ================= Filtros ================= --}}
     <div class="row">
         <div class="col-12">
-            <div class="card hm-m-hover">
+            <div class="card">
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">

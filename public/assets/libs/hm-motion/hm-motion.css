@@ -8,7 +8,8 @@
      nada que se repinte solo (tick, poll, auto-refresh).
    - Entrada con ease-out, spinner lineal y duraciones como tokens (no un único valor para todo).
    - Con prefers-reduced-motion todo se apaga y el dato aparece directo.
-   Clases: hm-m-entra · hm-m-skel · hm-m-hover · hm-m-barra · hm-m-gira · hm-m-fade · hm-m-ocupado
+   Clases: hm-m-entra · hm-m-skel · hm-m-hover · hm-m-barra · hm-m-gira · hm-m-fade · hm-m-ocupado · hm-m-cargando
+   hm-m-hover solo en elementos con acción (enlace, botón, "Clic para filtrar"): una tarjeta que no hace nada no se eleva.
    ========================================================================= */
 :root {
     --hm-m-dur-entra: .38s;          /* entrada de tarjetas y bloques */
@@ -71,20 +72,36 @@ html[data-tema="oscuro"], [data-bs-theme="dark"], [data-layout-mode="dark"], [da
 /* Zona ocupada (R5): bloquea la interacción en el reporte que carga, sin oscurecer la pantalla.
    HMMotion.ocupar(zona, true) pone esta clase, aria-busy y deshabilita botones e inputs. */
 .hm-m-ocupado { position: relative; }
-.hm-m-ocupado > :not(.hm-m-ocupado-ind) { opacity: .5; transition: opacity var(--hm-m-dur-rapida) ease; }
+.hm-m-ocupado > * { opacity: .5; transition: opacity var(--hm-m-dur-rapida) ease; }
 .hm-m-ocupado::after { content: ""; position: absolute; inset: 0; z-index: 20; cursor: progress; }   /* captura los clics */
-.hm-m-ocupado-ind {
-    position: absolute; z-index: 21; top: 1rem; left: 50%; transform: translateX(-50%);
-    display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .85rem;
-    border-radius: 99px; background: var(--bs-body-bg, #fff); color: var(--bs-body-color, #343a40);
-    box-shadow: var(--hm-m-sombra); font-size: .85rem; font-weight: 500; pointer-events: none;
-    animation: hm-m-fade var(--hm-m-dur-rapida) ease-out both;
+/* La tarjeta única de carga: la misma del mapa de Anubis (.an-cargando), fija y centrada sobre las zonas */
+.hm-m-cargando {
+    position: fixed; z-index: 1055; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: flex; align-items: center; gap: .75rem; padding: .85rem 1.1rem; border-radius: .5rem;
+    background: var(--hm-m-card, #fff); color: var(--hm-m-card-txt, #343a40);
+    box-shadow: 0 .5rem 1.5rem rgba(18, 38, 63, .2); font-size: .8rem; max-width: calc(100vw - 2rem);
+    pointer-events: none; animation: hm-m-fade var(--hm-m-dur-rapida) ease-out both;
 }
+.hm-m-cargando-txt { display: flex; flex-direction: column; }
+.hm-m-cargando-txt strong { font-weight: 600; font-size: .85rem; }
+.hm-m-cargando-txt small { color: var(--hm-m-card-sub, #74788d); }
+.hm-m-cargando-giro {
+    width: 1.6rem; height: 1.6rem; flex-shrink: 0; border-radius: 50%;
+    border: .2em solid var(--hm-m-acento, #e62932); border-right-color: transparent;
+    animation: hm-m-giro .75s linear infinite;
+}
+html[data-tema="oscuro"] .hm-m-cargando, [data-bs-theme="dark"] .hm-m-cargando, [data-layout-mode="dark"] .hm-m-cargando {
+    --hm-m-card: #2a3042; --hm-m-card-txt: #e2e6ef; --hm-m-card-sub: #a6b0cf;
+}
+/* un solo indicador: mientras haya zonas ocupadas no se muestra el "Procesando…" de DataTables */
+html.hm-m-ocupando .dataTables_processing { display: none !important; }
 
 /* P9 · movimiento reducido: todo directo */
 @media (prefers-reduced-motion: reduce) {
-    .hm-m-entra, .hm-m-fade, .hm-m-ocupado-ind { animation: none; opacity: 1; transform: none; }
+    .hm-m-entra, .hm-m-fade { animation: none; opacity: 1; transform: none; }
+    .hm-m-cargando { animation: none; }
     .hm-m-skel::after, .hm-m-gira { animation: none; }
+    .hm-m-cargando-giro { animation-duration: 2s; }
     .hm-m-hover, .hm-m-barra, .hm-m-ocupado > * { transition: none; }
     .hm-m-hover:hover { transform: none; }
     /* red de seguridad global para animaciones propias de cada app */

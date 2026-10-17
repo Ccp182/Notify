@@ -15,7 +15,7 @@
     <!-- hm-icons: set propio (hmi hmi-x) -->
     <link href="{{ asset('assets/libs/hm-icons/hm-icons.css') }}" rel="stylesheet" type="text/css">
     <!-- hm-motion: movimiento sutil comun (reduced-motion incluido) -->
-    <link href="{{ asset('assets/libs/hm-motion/hm-motion.css') }}?v=2" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets/libs/hm-motion/hm-motion.css') }}?v=3" rel="stylesheet" type="text/css">
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css">
 
     @stack('css')

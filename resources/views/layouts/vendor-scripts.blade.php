@@ -3,7 +3,7 @@
     <script src="{{ asset('assets/libs/metismenu/metisMenu.min.js') }}"></script>
     <script src="{{ asset('assets/libs/simplebar/simplebar.min.js') }}"></script>
     <script src="{{ asset('assets/libs/node-waves/waves.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/hm-motion/hm-motion.js') }}?v=2"></script>
+    <script src="{{ asset('assets/libs/hm-motion/hm-motion.js') }}?v=3"></script>
     <script src="{{ asset('assets/js/app.js') }}"></script>
 
     {{-- Single Logout: si cualquier llamada Ajax/fetch responde 401, el
