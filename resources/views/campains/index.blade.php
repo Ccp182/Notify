@@ -36,7 +36,7 @@
                                 <i class="ri-filter-3-line align-middle me-1"></i> Aplicar
                             </button>
                             <button type="button" class="btn btn-light" id="btnLimpiarFiltro">
-                                <i class="ri-close-line align-middle me-1"></i> Limpiar
+                                <i class="mdi mdi-close align-middle me-1"></i> Limpiar
                             </button>
                             <a href="{{ route('wizard') }}" class="btn btn-success ms-1">
                                 <i class="mdi mdi-bullhorn-outline align-middle me-1"></i> Campaña nueva

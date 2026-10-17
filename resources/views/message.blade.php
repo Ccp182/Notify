@@ -64,7 +64,7 @@
                         <span class="text-muted small me-2"><i class="ri-bullseye-line me-1"></i> Campañas:</span>
                         <select id="dbIdCampaigns" multiple class="form-select form-select-sm" style="min-width:320px; max-width:600px;"></select>
                         <button type="button" id="btnDbLimpiarCampanas" class="btn btn-sm btn-light" title="Quitar filtro de campañas">
-                            <i class="ri-close-line"></i>
+                            <i class="mdi mdi-close"></i>
                         </button>
                     </div>
                 </div>

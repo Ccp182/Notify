@@ -96,7 +96,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="btn btn-outline-secondary">
-                    <i class="ri-shut-down-line me-1"></i> Cerrar sesión
+                    <i class="mdi mdi-logout me-1"></i> Cerrar sesión
                 </button>
             </form>
         </div>
@@ -150,7 +150,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="btn btn-outline-secondary w-100">
-                    <i class="ri-shut-down-line me-1"></i> Cerrar sesión
+                    <i class="mdi mdi-logout me-1"></i> Cerrar sesión
                 </button>
             </form>
         </div>

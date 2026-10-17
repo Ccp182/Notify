@@ -10,6 +10,10 @@
     <!-- Bootstrap 5 (Nazox) -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css">
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css">
+    <!-- MDI 7.4.47 (HX-15): despues de icons de Nazox -->
+    <link href="{{ asset('assets/libs/mdi7/css/materialdesignicons.min.css') }}" rel="stylesheet" type="text/css">
+    <!-- hm-icons: set propio (hmi hmi-x) -->
+    <link href="{{ asset('assets/libs/hm-icons/hm-icons.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css">
 
     @stack('css')

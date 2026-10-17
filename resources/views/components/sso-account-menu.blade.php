@@ -65,7 +65,7 @@
                 <small class="text-muted d-block text-truncate">{{ $accMail }}</small>
             @endif
             <a href="{{ $profileUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary mt-3 rounded-pill px-3">
-                <i class="ri-user-settings-line align-middle me-1"></i> Gestionar mi cuenta
+                <i class="mdi mdi-account-cog align-middle me-1"></i> Gestionar mi cuenta
             </a>
         </div>
         <div class="dropdown-divider m-0"></div>
@@ -78,7 +78,7 @@
         <form method="POST" action="{{ route($logoutRoute) }}" class="m-0">
             @csrf
             <button type="submit" class="dropdown-item text-danger py-2">
-                <i class="ri-shut-down-line align-middle me-1 text-danger"></i> Cerrar sesión
+                <i class="mdi mdi-logout align-middle me-1 text-danger"></i> Cerrar sesión
             </button>
         </form>
     </div>
