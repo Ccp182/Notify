@@ -132,6 +132,26 @@ class ExternalApiService
     }
 
     /**
+     * POST Notify/acceso: ¿este token puede usar Notify? (pantalla de subusuarios).
+     * A diferencia de post(), NO traga las excepciones de red: las deja subir para
+     * que AccesoNotify decida (ante un fallo deja pasar; la barrera real es el 403
+     * del SSO). Usa el mismo client() (token de sesion + cabeceras de identidad) y
+     * un timeout corto de 10 s. Retorna el JSON decodificado o null si la respuesta
+     * no fue 200.
+     */
+    public function acceso(): ?array
+    {
+        $res = $this->client()
+            ->timeout(10)
+            ->post($this->url('Notify/acceso'), [
+                'origen'   => 'pantalla',
+                'ipClient' => request()->ip(),
+            ]);
+
+        return $res->ok() ? $res->json() : null;
+    }
+
+    /**
      * GET con cache por pais + path + query.
      * Util para catalogos estables (TipoEntidad, Plataformas).
      */

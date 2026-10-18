@@ -4,6 +4,7 @@ use App\Http\Controllers\AppSelectController;
 use App\Http\Controllers\CampainController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SSOController;
+use App\Http\Middleware\AccesoNotify;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,14 +26,17 @@ Route::post('/logout',       [SSOController::class, 'logout'])->name('logout');
 
 
 // ---- Con SSO valido (sin necesidad de app seleccionada) ----
-Route::middleware(['sso'])->group(function () {
+// AccesoNotify (2026-10-17): Notify es solo para el usuario principal; con token de
+// subusuario muestra "Ingresa con el usuario principal". Va despues de 'sso' y antes
+// de 'app.select'; login/callback/logout quedan fuera.
+Route::middleware(['sso', AccesoNotify::class])->group(function () {
     Route::get('/select-app',  [AppSelectController::class, 'show'])->name('select-app.show');
     Route::post('/select-app', [AppSelectController::class, 'select'])->name('select-app.select');
 });
 
 
 // ---- Protegidas (SSO + AppNotify en sesion) ----
-Route::middleware(['sso', 'app.select'])->group(function () {
+Route::middleware(['sso', AccesoNotify::class, 'app.select'])->group(function () {
 
     // Dashboard y wizard
     Route::get('/dashboard', [MessageController::class, 'dashboard'])->name('dashboard');
