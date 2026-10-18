@@ -208,6 +208,12 @@ class EnsureSsoTokenIsValid
 
     private function clearSession(Request $request): void
     {
+        // Solo se destruye una sesion que todavia tiene token. Invalidar una ya cerrada crea
+        // sesion y cookie nuevas: una pestana vieja que sigue pidiendo datos con 401 borraba
+        // asi el state del login en curso de otra pestana ("sesion de inicio expiro", 2026-10-18).
+        if (!Session::has('access_token')) {
+            return;
+        }
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         Session::flush();
