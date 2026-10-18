@@ -69,7 +69,9 @@ Route::middleware(['sso', 'app.select'])->group(function () {
 
 
 
-Route::get('/debug/token', function () {
+// Debug: muestra el access_token de la sesion. 2026-10-17: solo existe con
+// SSO_DEBUG_TOKEN=true en el .env (apagado por defecto).
+if (env('SSO_DEBUG_TOKEN', false)) Route::get('/debug/token', function () {
     dd([
         'access_token' => session('access_token'),
         'Pais'         => session('Pais'),
