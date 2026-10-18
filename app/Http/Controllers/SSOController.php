@@ -181,6 +181,7 @@ class SSOController extends Controller
         Session::put('access_token', $accessToken);
         if ($refreshToken) Session::put('refresh_token', $refreshToken);
         if ($expiresIn)    Session::put('token_expires_at', now()->addSeconds($expiresIn));
+        Session::put('sso_ultima_actividad', now()); // AU14: base del corte por inactividad (120 min)
 
         // Obtener perfil del usuario usando el MISMO country de routing
         $userResponse = Http::withToken($accessToken)

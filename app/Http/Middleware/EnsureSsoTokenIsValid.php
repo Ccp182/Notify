@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -30,6 +31,29 @@ class EnsureSsoTokenIsValid
     {
         $accessToken = Session::get('access_token');
         $expiresAt   = Session::get('token_expires_at');
+
+        if ($accessToken) {
+            // AU14 inactividad: mas de 120 min sin peticiones -> se cierra la sesion. El tope
+            // absoluto de 12 h lo sigue imponiendo la cookie compartida hm_sso (mas abajo).
+            $ultimaActividad = Session::get('sso_ultima_actividad');
+            if ($ultimaActividad && abs(Carbon::parse($ultimaActividad)->diffInMinutes(now())) > 120) {
+                $this->clearSession($request);
+                return $this->bounceToLogin($request);
+            }
+            Session::put('sso_ultima_actividad', now());
+
+            // AU14 renovacion: a 5 min (o menos) de vencer se pide un access token nuevo con el
+            // refresh_token. Si falla se cierra la sesion igual que con el token vencido.
+            if ($expiresAt && Session::get('refresh_token')
+                && Carbon::parse($expiresAt)->lessThanOrEqualTo(now()->addMinutes(5))) {
+                if (!$this->renovarToken()) {
+                    $this->clearSession($request);
+                    return $this->bounceToLogin($request);
+                }
+                $accessToken = Session::get('access_token');
+                $expiresAt   = Session::get('token_expires_at');
+            }
+        }
 
         if (!$accessToken || ($expiresAt && now()->greaterThan($expiresAt))) {
             $this->clearSession($request);
@@ -135,6 +159,51 @@ class EnsureSsoTokenIsValid
         view()->share('Pais',       Session::get('Pais'));
         view()->share('AppNotify',  Session::get('AppNotify'));
         return $response;
+    }
+
+    /**
+     * AU14: renueva el access token (grant refresh_token) contra /oauth/token del SSO,
+     * con el pais de la sesion. Devuelve false ante cualquier falla; nunca registra tokens.
+     */
+    private function renovarToken(): bool
+    {
+        $config = config('services.core_sso');
+
+        try {
+            $response = Http::asForm()
+                ->acceptJson()
+                ->withHeaders($this->cabecerasCliente())
+                ->timeout(10)
+                ->post(rtrim($config['base_uri'], '/').'/oauth/token', [
+                    'grant_type'    => 'refresh_token',
+                    'refresh_token' => Session::get('refresh_token'),
+                    'client_id'     => $config['client_id'],
+                    'client_secret' => $config['client_secret'],
+                    'scope'         => '',
+                    'country'       => strtoupper((string) Session::get('Pais', 'EC')),
+                ]);
+        } catch (\Throwable $e) {
+            Log::warning('SSO: excepcion al renovar el access token', ['message' => $e->getMessage()]);
+            return false;
+        }
+
+        $data = $response->json();
+        if (!$response->ok() || empty($data['access_token'])) {
+            Log::warning('SSO: no se pudo renovar el access token', ['status' => $response->status()]);
+            return false;
+        }
+
+        Session::put('access_token', $data['access_token']);
+        if (!empty($data['refresh_token'])) Session::put('refresh_token', $data['refresh_token']);
+        if (!empty($data['expires_in'])) {
+            Session::put('token_expires_at', now()->addSeconds((int) $data['expires_in']));
+        } else {
+            Session::forget('token_expires_at');
+        }
+        // La huella de AccesoNotify es sha256(access_token): con el token nuevo se re-consulta.
+        Session::forget('notify_acceso');
+
+        return true;
     }
 
     private function clearSession(Request $request): void
