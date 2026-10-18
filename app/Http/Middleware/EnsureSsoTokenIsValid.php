@@ -53,7 +53,9 @@ class EnsureSsoTokenIsValid
         if ($request->isMethod('GET') && !$request->ajax() && !$request->expectsJson()) {
             $lastCheck = Session::get('sso_last_check');
 
-            if (!$lastCheck || now()->diffInSeconds($lastCheck) >= 60) {
+            // abs(): en Carbon 3 now()->diffInSeconds($pasado) es NEGATIVO y la revalidacion
+            // no volvia a correr nunca (mismo fix que HMMantenedores y HMAnubis, 2026-10-17).
+            if (!$lastCheck || abs(now()->diffInSeconds($lastCheck)) >= 60) {
                 $config  = config('services.core_sso');
                 $country = strtoupper((string) Session::get('Pais', 'EC'));
 
