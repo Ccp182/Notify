@@ -1,0 +1,114 @@
+/* =============================================================================
+   HMNotify · reglas del tema OSCURO (HX-29)
+   -----------------------------------------------------------------------------
+   hm-tema.js marca <html data-tema="oscuro"> e intercambia bootstrap/app por sus
+   -dark. Eso resuelve Nazox, pero las piezas PROPIAS de Notify (KPI del
+   dashboard, Select2, listas, cajas del asistente) traen colores de modo claro
+   escritos a mano. Aqui solo se redefinen BAJO html[data-tema="oscuro"]; el modo
+   claro no se toca. Los graficos (ApexCharts) se pintan por JS en
+   message.blade.php (temaGraf) y se repintan con el evento 'hm:tema'.
+
+   Superficies Nazox oscuro: pagina #1d222e, tarjeta #252b3b, elevado #2d3448,
+   borde #363e54. Contrastes medidos contra la tarjeta #252b3b (AA texto >= 4,5:1):
+     --nt-txt  #eef1f8 ~13:1   --nt-cuerpo #aab3cc ~7:1   --nt-mute #98a2bd ~5,6:1
+   ============================================================================= */
+
+html[data-tema="oscuro"] {
+    --nt-pagina: #1d222e;
+    --nt-card:   #252b3b;
+    --nt-elev:   #2d3448;
+    --nt-borde:  #363e54;
+    --nt-txt:    #eef1f8;
+    --nt-cuerpo: #aab3cc;
+    --nt-mute:   #98a2bd;
+}
+
+/* ---- KPI del dashboard ----------------------------------------------------- */
+html[data-tema="oscuro"] .kpi-card { background: var(--nt-card); border-color: var(--nt-borde); }
+html[data-tema="oscuro"] .kpi-label,
+html[data-tema="oscuro"] .kpi-suffix,
+html[data-tema="oscuro"] .kpi-hint { color: var(--nt-mute); }
+/* .text-dark de Bootstrap es casi negro: en el KPI y en el resumen del modal pasa a titulo claro */
+html[data-tema="oscuro"] .kpi-value.text-dark,
+html[data-tema="oscuro"] #modalEntregaResumen .text-dark { color: var(--nt-txt) !important; }
+/* Tasas: los verdes/ambar/rojos de claro (AA sobre blanco) se aclaran para AA sobre oscuro */
+html[data-tema="oscuro"] .kpi-rate-ok   { color: #4cd3a5; }
+html[data-tema="oscuro"] .kpi-rate-warn { color: #f5c46a; }
+html[data-tema="oscuro"] .kpi-rate-bad  { color: #ff8095; }
+html[data-tema="oscuro"] .kpi-value.text-warning { color: #f5c46a !important; }
+
+/* ---- listas compactas (Top campanas) -------------------------------------- */
+html[data-tema="oscuro"] .mini-list li { border-bottom-color: var(--nt-borde); }
+html[data-tema="oscuro"] .mini-list .name .n1 { color: var(--nt-txt); }
+html[data-tema="oscuro"] .mini-list .name .n2,
+html[data-tema="oscuro"] .mini-list .aside { color: var(--nt-mute); }
+html[data-tema="oscuro"] .mini-list .aside strong { color: var(--nt-cuerpo); }
+
+/* ---- Select2 (filtro de campanas) ----------------------------------------- */
+html[data-tema="oscuro"] .select2-container--default .select2-selection--multiple,
+html[data-tema="oscuro"] .select2-container--default .select2-selection--single {
+    background-color: var(--nt-elev); border-color: var(--nt-borde); color: var(--nt-cuerpo);
+}
+html[data-tema="oscuro"] .select2-container--default.select2-container--focus .select2-selection--multiple,
+html[data-tema="oscuro"] .select2-container--default.select2-container--open .select2-selection--multiple {
+    border-color: #7d92ff; box-shadow: 0 0 0 .2rem rgba(125,146,255,.25);
+}
+html[data-tema="oscuro"] .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: rgba(125,146,255,.2); border-color: rgba(125,146,255,.45); color: #c9d2ff;
+}
+html[data-tema="oscuro"] .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: #c9d2ff; }
+html[data-tema="oscuro"] .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { color: #fff; }
+html[data-tema="oscuro"] .select2-container--default .select2-selection--multiple .select2-selection__clear { color: var(--nt-mute); }
+html[data-tema="oscuro"] .select2-container--default .select2-selection__placeholder,
+html[data-tema="oscuro"] .select2-container--default .select2-search--inline .select2-search__field { color: var(--nt-mute); }
+html[data-tema="oscuro"] .select2-container--default .select2-search--inline .select2-search__field { background: transparent; }
+html[data-tema="oscuro"] .select2-dropdown {
+    background-color: var(--nt-elev); border-color: var(--nt-borde); color: var(--nt-cuerpo);
+}
+html[data-tema="oscuro"] .select2-container--default .select2-search--dropdown .select2-search__field {
+    background-color: var(--nt-card); border-color: var(--nt-borde); color: var(--nt-txt);
+}
+html[data-tema="oscuro"] .select2-container--default .select2-results__option { color: var(--nt-cuerpo); }
+html[data-tema="oscuro"] .select2-container--default .select2-results__option[aria-selected=true] { background-color: rgba(125,146,255,.16); color: var(--nt-txt); }
+html[data-tema="oscuro"] .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #5a6dd6; color: #fff; }
+html[data-tema="oscuro"] .select2-container--default .select2-results__message { color: var(--nt-mute); }
+/* El <select multiple> nativo (antes de que Select2 lo cambie) tambien se ve oscuro */
+html[data-tema="oscuro"] select.form-select[multiple] { background-color: var(--nt-elev); border-color: var(--nt-borde); color: var(--nt-cuerpo); }
+
+/* ---- Campanas / asistente: cajas y campos --------------------------------- */
+html[data-tema="oscuro"] .notification .tipoNotiClass,
+html[data-tema="oscuro"] .notification .tipoDesignNotiClass { background: var(--nt-elev); }
+html[data-tema="oscuro"] .hmtlSetNoti textarea,
+html[data-tema="oscuro"] .hmtlSetNoti textarea:focus {
+    background-color: var(--nt-elev) !important; border-color: var(--nt-borde); color: var(--nt-txt);
+}
+/* El asistente fuerza body{background:#F1F5F7 !important} */
+html[data-tema="oscuro"] body { background-color: var(--nt-pagina) !important; }
+html[data-tema="oscuro"] #modalEntregaResumen .border { border-color: var(--nt-borde) !important; }
+
+/* multiple-select (Grupos / Tipo de entrega) */
+html[data-tema="oscuro"] .ms-choice { background-color: var(--nt-elev); border-color: var(--nt-borde); color: var(--nt-cuerpo); }
+html[data-tema="oscuro"] .ms-choice > span.placeholder { color: var(--nt-mute); }
+html[data-tema="oscuro"] .ms-drop { background: var(--nt-elev); color: var(--nt-cuerpo); border-color: var(--nt-borde); }
+html[data-tema="oscuro"] .ms-search input { background: var(--nt-card); border-color: var(--nt-borde); color: var(--nt-txt); }
+html[data-tema="oscuro"] .ms-drop ul > li.hide-radio:hover,
+html[data-tema="oscuro"] .ms-drop ul > li.hide-radio:focus { background-color: var(--nt-card); }
+
+/* ---- Cambiar app (seleccion) ---------------------------------------------- */
+html[data-tema="oscuro"] .a-app-icon { background-color: var(--nt-elev); color: var(--nt-cuerpo); }
+html[data-tema="oscuro"] .a-app-icon:hover { background-color: #363e54; color: var(--nt-txt); }
+html[data-tema="oscuro"] .a-app-icon .card-title { color: var(--nt-txt); }
+html[data-tema="oscuro"] .hmsso-header p { color: var(--nt-mute); }
+html[data-tema="oscuro"] .btn-outline-secondary:hover { background-color: var(--nt-elev); color: var(--nt-txt); }
+
+/* Enlaces del color institucional (rojo #ff0030 = 3,7:1 sobre la tarjeta): se aclaran a >= 4,5:1 */
+html[data-tema="oscuro"] .card-body a:not(.btn):not(.nav-link):not(.dropdown-item) { color: #ff6b86; }
+html[data-tema="oscuro"] .card-body a:not(.btn):not(.nav-link):not(.dropdown-item):hover { color: #ff93a7; }
+
+/* ---- Tabla de campanas y badges ------------------------------------------- */
+html[data-tema="oscuro"] #tblCampanas tbody td { color: var(--nt-cuerpo); }
+html[data-tema="oscuro"] .badge.bg-secondary { background-color: #626d8c !important; color: #fff; }       /* blanco/#919bae daba 2,7:1 */
+html[data-tema="oscuro"] .badge.bg-soft-primary.text-primary { color: #ff8aa0 !important; }                 /* rojo institucional sobre tinte */
+html[data-tema="oscuro"] .badge.bg-soft-success.text-success { color: #4cd3a5 !important; }
+html[data-tema="oscuro"] .badge.bg-soft-info.text-info       { color: #7cbcff !important; }
+html[data-tema="oscuro"] .badge.bg-soft-warning.text-warning { color: #ffd067 !important; }

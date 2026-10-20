@@ -261,28 +261,48 @@ $(function () {
 
     // ---------- Graficos ----------
     let chSerie = null, chDonut = null, chTop = null;
+    let ultSerie = [], ultDonut = null, ultTop = [];
+
+    // Paleta de los graficos segun el tema (HX-29). En claro son los valores de siempre.
+    function temaGraf() {
+        const osc = document.documentElement.getAttribute('data-tema') === 'oscuro';
+        return osc ? {
+            osc: true, texto: '#aab3cc', grilla: '#363e54', card: '#252b3b',
+            serie: ['#8d98b3', '#7d92ff', '#34c38f'],
+            donut: ['#34c38f', '#4fc3e8', '#8d98b3', '#f46a6a'], donutVacio: '#46506b',
+            top: ['#7d92ff', '#8d98b3']
+        } : {
+            osc: false, texto: '#6c757d', grilla: '#f1f3f5', card: '#ffffff',
+            serie: ['#adb5bd', '#0d6efd', '#198754'],
+            donut: ['#198754', '#0dcaf0', '#6c757d', '#dc3545'], donutVacio: '#e9ecef',
+            top: ['#0d6efd', '#adb5bd']
+        };
+    }
 
     function renderSerie(rows) {
+        ultSerie = rows;
+        const t = temaGraf();
         const cats = rows.map(r => r.Fecha);
         const audiencia   = rows.map(r => +r.AudienciaReal || 0);
         const entregadas  = rows.map(r => +r.Entregadas    || 0);
         const confirmadas = rows.map(r => +r.Confirmadas   || 0);
 
         const opts = {
-            chart: { type: 'line', height: 300, toolbar: { show: false }, animations: { enabled: false } },
+            chart: { type: 'line', height: 300, toolbar: { show: false }, animations: { enabled: false }, background: 'transparent', foreColor: t.texto },
             stroke: { curve: 'smooth', width: [0, 3, 3] },
-            colors: ['#adb5bd', '#0d6efd', '#198754'],
+            colors: t.serie,
             series: [
                 { name: 'Audiencia',   type: 'area',   data: audiencia },
                 { name: 'Entregadas',  type: 'line',   data: entregadas },
                 { name: 'Confirmadas', type: 'line',   data: confirmadas }
             ],
             fill: { opacity: [0.12, 1, 1] },
-            xaxis: { categories: cats, labels: { rotate: -45, style: { fontSize: '10px' } } },
-            yaxis: { labels: { formatter: v => fmtInt(v) } },
-            legend: { position: 'top' },
-            tooltip: { shared: true, y: { formatter: v => fmtInt(v) + ' dispositivos' } },
-            grid: { borderColor: '#f1f3f5' }
+            xaxis: { categories: cats, labels: { rotate: -45, style: { fontSize: '10px', colors: t.texto } }, axisBorder: { color: t.grilla }, axisTicks: { color: t.grilla } },
+            yaxis: { labels: { formatter: v => fmtInt(v), style: { colors: t.texto } } },
+            legend: { position: 'top', labels: { colors: t.texto } },
+            tooltip: { theme: t.osc ? 'dark' : 'light', shared: true, y: { formatter: v => fmtInt(v) + ' dispositivos' } },
+            theme: { mode: t.osc ? 'dark' : 'light' },
+            grid: { borderColor: t.grilla }
         };
 
         if (chSerie) { chSerie.updateOptions(opts); }
@@ -290,6 +310,8 @@ $(function () {
     }
 
     function renderDonut(r) {
+        ultDonut = r;
+        const t = temaGraf();
         const series = [
             +r.Confirmadas || 0,
             +r.Enviadas    || 0,
@@ -299,18 +321,22 @@ $(function () {
         const totalSum = series.reduce((a, b) => a + b, 0);
 
         const opts = {
-            chart:  { type: 'donut', height: 300 },
+            chart:  { type: 'donut', height: 300, background: 'transparent', foreColor: t.texto },
+            theme:  { mode: t.osc ? 'dark' : 'light' },
+            stroke: { colors: [t.card] },
             labels: ['Confirmadas', 'Enviadas', 'Pendientes', 'Fallidas'],
-            colors: ['#198754', '#0dcaf0', '#6c757d', '#dc3545'],
+            colors: t.donut,
             series: totalSum === 0 ? [1] : series,
-            legend: { position: 'bottom' },
+            legend: { position: 'bottom', labels: { colors: t.texto } },
             dataLabels: { enabled: totalSum !== 0 },
             plotOptions: {
                 pie: {
                     donut: {
                         labels: {
                             show: true,
-                            total: { show: true, label: 'Audiencia', formatter: () => fmtInt(totalSum) }
+                            name:  { color: t.texto },
+                            value: { color: t.osc ? '#eef1f8' : '#212529' },
+                            total: { show: true, label: 'Audiencia', color: t.texto, formatter: () => fmtInt(totalSum) }
                         }
                     }
                 }
@@ -320,7 +346,7 @@ $(function () {
 
         if (totalSum === 0) {
             opts.labels = ['Sin datos'];
-            opts.colors = ['#e9ecef'];
+            opts.colors = [t.donutVacio];
             opts.dataLabels = { enabled: false };
             opts.tooltip = { enabled: false };
         }
@@ -331,6 +357,8 @@ $(function () {
     }
 
     function renderTop(rows) {
+        ultTop = rows;
+        const t = temaGraf();
         const $list = $('#topList').empty();
 
         if (!rows.length) {
@@ -345,17 +373,20 @@ $(function () {
         const aud  = rows.map(r => +r.AudienciaReal || 0);
 
         const opts = {
-            chart:  { type: 'bar', height: 260, toolbar: { show: false }, animations: { enabled: false } },
+            chart:  { type: 'bar', height: 260, toolbar: { show: false }, animations: { enabled: false }, background: 'transparent', foreColor: t.texto },
+            theme:  { mode: t.osc ? 'dark' : 'light' },
             plotOptions: { bar: { horizontal: true, barHeight: '60%', borderRadius: 3 } },
-            colors: ['#0d6efd', '#adb5bd'],
+            colors: t.top,
             dataLabels: { enabled: true, formatter: v => fmtInt(v) },
             series: [
                 { name: 'Entregadas', data: ent },
                 { name: 'Audiencia',  data: aud }
             ],
-            xaxis: { categories: cats, labels: { formatter: v => fmtInt(v) } },
-            legend: { position: 'top' },
-            grid: { borderColor: '#f1f3f5' }
+            xaxis: { categories: cats, labels: { formatter: v => fmtInt(v), style: { colors: t.texto } } },
+            yaxis: { labels: { style: { colors: t.texto } } },
+            legend: { position: 'top', labels: { colors: t.texto } },
+            tooltip: { theme: t.osc ? 'dark' : 'light' },
+            grid: { borderColor: t.grilla }
         };
 
         if (chTop) { chTop.destroy(); }
@@ -375,6 +406,13 @@ $(function () {
             );
         });
     }
+
+    // Al cambiar el tema (hm-tema.js dispara 'hm:tema') se repintan los graficos con la paleta nueva.
+    document.addEventListener('hm:tema', function () {
+        if (chDonut && ultDonut) { renderDonut(ultDonut); }
+        if (chSerie) { chSerie.destroy(); chSerie = null; renderSerie(ultSerie); }
+        if (chTop && ultTop.length) { renderTop(ultTop); }
+    });
 
     // ---------- Eventos ----------
     $('.js-rango').on('click', function () {
