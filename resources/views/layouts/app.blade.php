@@ -138,5 +138,6 @@
     </div>
 
     @include('layouts.vendor-scripts')
+    <script src="{{ asset('assets/js/hm-tema/hm-tema-boton.js') }}?v=1"></script>
 </body>
 </html>

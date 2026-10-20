@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ $favicon }}">
 
     <!-- Bootstrap 5 (Nazox) -->
-    <link href="{{ asset('assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" data-claro="{{ asset('assets/css/bootstrap.min.css') }}" data-oscuro="{{ asset('assets/css/bootstrap-dark.min.css') }}">
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css">
     <!-- MDI 7.4.47 (HX-15): despues de icons de Nazox -->
     <link href="{{ asset('assets/libs/mdi7/css/materialdesignicons.min.css') }}" rel="stylesheet" type="text/css">
@@ -16,6 +16,7 @@
     <link href="{{ asset('assets/libs/hm-icons/hm-icons.css') }}" rel="stylesheet" type="text/css">
     <!-- hm-motion: movimiento sutil comun (reduced-motion incluido) -->
     <link href="{{ asset('assets/libs/hm-motion/hm-motion.css') }}?v=3" rel="stylesheet" type="text/css">
-    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" data-claro="{{ asset('assets/css/app.min.css') }}" data-oscuro="{{ asset('assets/css/app-dark.min.css') }}">
+    <script src="{{ asset('assets/js/hm-tema/hm-tema.js') }}?v=1" data-ids="bootstrap-style,app-style"></script>
 
     @stack('css')
