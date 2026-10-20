@@ -18,7 +18,7 @@
     <link href="{{ asset('assets/libs/hm-motion/hm-motion.css') }}?v=3" rel="stylesheet" type="text/css">
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" data-claro="{{ asset('assets/css/app.min.css') }}" data-oscuro="{{ asset('assets/css/app-dark.min.css') }}">
     <!-- Tema oscuro propio de Notify (HX-29): solo actua bajo html[data-tema="oscuro"] -->
-    <link href="{{ asset('assets/css/notify-oscuro.css') }}?v=3" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets/css/notify-oscuro.css') }}?v=4" rel="stylesheet" type="text/css">
     <script src="{{ asset('assets/js/hm-tema/hm-tema.js') }}?v=1" data-ids="bootstrap-style,app-style"></script>
 
     @stack('css')

@@ -112,3 +112,9 @@ html[data-tema="oscuro"] .badge.bg-soft-primary.text-primary { color: #ff8aa0 !i
 html[data-tema="oscuro"] .badge.bg-soft-success.text-success { color: #4cd3a5 !important; }
 html[data-tema="oscuro"] .badge.bg-soft-info.text-info       { color: #7cbcff !important; }
 html[data-tema="oscuro"] .badge.bg-soft-warning.text-warning { color: #ffd067 !important; }
+
+/* HX-29b: lanzador de apps y menu de cuenta en oscuro (contraste >= 4,5:1) */
+html[data-tema="oscuro"] .sso-app-section-title{color:#9aa5c0;}
+html[data-tema="oscuro"] .sso-app-tile-name{color:#c4cbe0;}
+html[data-tema="oscuro"] .dropdown-menu .dropdown-item.text-danger,html[data-tema="oscuro"] .dropdown-menu .text-danger{color:#ff8da1 !important;}
+html[data-tema="oscuro"] .sso-account-dropdown .btn-outline-secondary{color:#c4cbe0;border-color:#4a5470;}
