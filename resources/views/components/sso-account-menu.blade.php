@@ -30,20 +30,20 @@
 
 @once
 <style>
-    .sso-avatar{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:600;border-radius:50%;line-height:1;text-transform:uppercase;font-family:'Poppins',system-ui,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.1);overflow:hidden;vertical-align:middle;}
+    .sso-avatar{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:600;border-radius:50%;line-height:1;text-transform:uppercase;font-family:'Poppins',system-ui,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.1);overflow:hidden;vertical-align:middle;background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35));}
     .sso-avatar-sm{width:34px;height:34px;font-size:15px;}
     .sso-avatar-md{width:56px;height:56px;font-size:22px;}
     .sso-avatar-lg{width:64px;height:64px;font-size:26px;display:flex;}
-    .sso-shade-0{filter:brightness(.78) saturate(1.1);}
-    .sso-shade-1{filter:brightness(.85) saturate(1.05);}
+    .sso-shade-0{filter:brightness(.80) saturate(1.1);}
+    .sso-shade-1{filter:brightness(.86) saturate(1.05);}
     .sso-shade-2{filter:brightness(.92);}
     .sso-shade-3{filter:brightness(.98);}
-    .sso-shade-4{filter:brightness(1.04);}
-    .sso-shade-5{filter:brightness(1.10);}
-    .sso-shade-6{filter:brightness(1.16) saturate(.95);}
-    .sso-shade-7{filter:brightness(1.22) saturate(.90);}
-    .sso-shade-8{filter:brightness(.88) hue-rotate(-8deg);}
-    .sso-shade-9{filter:brightness(1.06) hue-rotate(8deg);}
+    .sso-shade-4{filter:brightness(.84);}
+    .sso-shade-5{filter:brightness(.90);}
+    .sso-shade-6{filter:brightness(.95) saturate(.95);}
+    .sso-shade-7{filter:brightness(.88) saturate(.90);}
+    .sso-shade-8{filter:brightness(.90) hue-rotate(-8deg);}
+    .sso-shade-9{filter:brightness(.94) hue-rotate(8deg);}
     .sso-account-dropdown{width:280px;overflow:hidden;}
     .sso-account-header{background:linear-gradient(180deg,#f8f9fa 0%,#fff 100%);border-bottom:1px solid rgba(0,0,0,.05);}
     .sso-account-header h6{font-size:15px;margin-top:.25rem;}
