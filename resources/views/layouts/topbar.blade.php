@@ -45,6 +45,9 @@
                 </button>
             </div>
 
+            {{-- Campana de avisos del SSO (HX-29, D4) --}}
+            @include('components.hm-campana', ['url' => url('/avisos')])
+
             {{-- Tema claro / oscuro (HX-29); lo cablea hm-tema-boton.js --}}
             <div class="dropdown d-inline-block ms-1">
                 <button type="button" class="btn header-item noti-icon waves-effect" id="hm-tema-btn" title="Tema" aria-label="Cambiar tema">

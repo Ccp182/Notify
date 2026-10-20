@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AvisosController;
 use App\Http\Controllers\AppSelectController;
 use App\Http\Controllers\CampainController;
 use App\Http\Controllers\MessageController;
@@ -30,6 +31,9 @@ Route::post('/logout',       [SSOController::class, 'logout'])->name('logout');
 // subusuario muestra "Ingresa con el usuario principal". Va despues de 'sso' y antes
 // de 'app.select'; login/callback/logout quedan fuera.
 Route::middleware(['sso', AccesoNotify::class])->group(function () {
+
+    // Campana de avisos del encabezado (HX-29): proxy al SSO, nunca falla.
+    Route::get('/avisos', [AvisosController::class, 'index'])->name('avisos');
     Route::get('/select-app',  [AppSelectController::class, 'show'])->name('select-app.show');
     Route::post('/select-app', [AppSelectController::class, 'select'])->name('select-app.select');
 });
