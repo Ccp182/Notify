@@ -13,3 +13,5 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+# Cache de Graphify (la escribe SSO/graphify-refresh.sh; el grafo unico vive en SSO/graphify-out)
+/graphify-out/
