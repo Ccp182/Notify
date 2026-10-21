@@ -23,7 +23,11 @@
         $hint = (int)($launcherA['HInt'] ?? 0);
         $hmov = (int)($launcherA['HMov'] ?? 0);
         $url  = trim((string)($launcherA['Url'] ?? ''));
-        if (!empty($launcherA['Core']) || !empty($launcherA['Legacy']) || $hmov === 1) {
+        // Sesiones anteriores al cambio del SSO no traen Core/Legacy: se deduce del id (valores de config/sso.php).
+        $idApp  = (int)($launcherA['IdApp'] ?? $launcherA['IdAppCore'] ?? 0);
+        $esCore = $launcherA['Core']   ?? ($idApp === 67);
+        $esLeg  = $launcherA['Legacy'] ?? in_array($idApp, [1, 32, 49, 56], true);
+        if ($esCore || $esLeg || $hmov === 1) {
             continue;
         }
         if ($url === '' || $url === '#') {
