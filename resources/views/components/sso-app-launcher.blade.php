@@ -1,65 +1,62 @@
 {{--
     Componente SSO App Launcher (waffle estilo Google).
 
-    Lista las apps a las que el usuario tiene acceso, SEGREGADAS en tres
-    secciones (mismo criterio que HMSrvAuth/home: loadUserAppsIntoSession):
+    Mismas reglas que el inicio del SSO (HMSrvAuth home.blade.php):
+      - Una sola seccion "Tus aplicaciones": web + internas (estas con etiqueta "Interna").
+      - Sin el propio SSO (Core), sin apps legacy (Legacy), sin apps moviles (HMov=1)
+        y sin apps sin URL o con '#'.
+      - Logo: isotipo de la marca (Iso) sobre su color cuando el logo es el viejo largo;
+        si no, el logo nuevo (ImgUrl / ImgShop).
+      - Al final, "Ver todas las aplicaciones" -> inicio del SSO.
 
-      - Aplicaciones Web      (HInt=0, HMov=0)
-      - Aplicaciones Internas (HInt=1, HMov=0)
-      - Aplicaciones Moviles  (HInt=0, HMov=1)
+    Lee de session('SsoApps') (endpoint SSO /AuthSSO/apps). Ver skill hm-sso-ecosystem.
 
-    Lee de session('SsoApps'). Ver skill hm-sso-ecosystem.
-
-    Schema esperado por item:
-      NApp, Url, Img, CPri, HInt, HMov, State (ya filtrado a 'A' por el endpoint).
-      ImgUrl  - URL absoluta del logo (variante white) - construida en el server.
-      ImgShop - URL absoluta del logo (variante color-shop) - usada por el waffle.
+    Schema por item: NApp, Url, CPri, HInt, HMov, ImgUrl, ImgShop, Iso, Core, Legacy
+    (los tres ultimos los agrega el SSO; sin ellos el componente degrada a lo anterior).
 --}}
 @php
     use Illuminate\Support\Facades\Session;
     $launcherApps = Session::get('SsoApps', []);
 
-    $launcherWeb = $launcherInternas = $launcherMoviles = [];
+    $launcherTiles = [];
     foreach ($launcherApps as $launcherA) {
         $hint = (int)($launcherA['HInt'] ?? 0);
         $hmov = (int)($launcherA['HMov'] ?? 0);
-        if ($hint === 0 && $hmov === 0) {
-            $launcherWeb[] = $launcherA;
-        } elseif ($hint === 1 && $hmov === 0) {
-            $launcherInternas[] = $launcherA;
-        } elseif ($hint === 0 && $hmov === 1) {
-            $launcherMoviles[] = $launcherA;
+        $url  = trim((string)($launcherA['Url'] ?? ''));
+        if (!empty($launcherA['Core']) || !empty($launcherA['Legacy']) || $hmov === 1) {
+            continue;
         }
+        if ($url === '' || $url === '#') {
+            continue;
+        }
+        $launcherA['_interna'] = $hint === 1;
+        $launcherTiles[] = $launcherA;
     }
-    $launcherTotal = count($launcherWeb) + count($launcherInternas) + count($launcherMoviles);
+    $launcherTotal = count($launcherTiles);
+    $launcherHome  = rtrim((string) config('services.core_sso.base_uri', ''), '/');
+    $launcherHome  = $launcherHome !== '' ? $launcherHome . '/home' : '';
 
-    // Renderizador inline de un tile (evita repetir markup 3 veces).
-    // Prioridad de imagen: ImgShop (full URL, variante color-shop, ya trae su
-    // propio diseno con fondo) > ImgUrl > Img raw > inicial del nombre.
-    // Cuando hay imagen NO usamos background-color: el icono color-shop ya
-    // viene con su identidad visual completa. El CPri solo se usa de fondo
-    // como fallback cuando no hay imagen.
     $renderTile = function (array $a): string {
         $name  = $a['NApp']    ?? '';
         $url   = $a['Url']     ?? '#';
-        $img   = $a['ImgShop'] ?? $a['ImgUrl'] ?? $a['Img'] ?? '';
         $color = $a['CPri']    ?? '#556ee6';
-        if ($img) {
-            return
-                '<a href="'.e($url).'" class="sso-app-tile" target="_blank" rel="noopener">'.
-                    '<div class="sso-app-tile-icon sso-app-tile-icon--img">'.
-                        '<img src="'.e($img).'" alt="'.e($name).'">'.
-                    '</div>'.
-                    '<span class="sso-app-tile-name">'.e($name).'</span>'.
-                '</a>';
+        $iso   = $a['Iso']     ?? '';
+        $img   = $a['ImgUrl']  ?? $a['ImgShop'] ?? $a['Img'] ?? '';
+        $tag   = !empty($a['_interna']) ? '<span class="sso-app-tile-tag">Interna</span>' : '';
+        if ($iso) {
+            $icon = '<div class="sso-app-tile-icon sso-app-tile-icon--iso" style="background-color: '.e($color).';">'.
+                        '<img src="'.e($iso).'" data-alt="'.e($img).'" alt="" '.
+                        'onerror="this.onerror=null;this.parentNode.classList.remove(\'sso-app-tile-icon--iso\');this.parentNode.classList.add(\'sso-app-tile-icon--img\');this.src=this.dataset.alt">'.
+                    '</div>';
+        } elseif ($img) {
+            $icon = '<div class="sso-app-tile-icon sso-app-tile-icon--img"><img src="'.e($img).'" alt=""></div>';
+        } else {
+            $icon = '<div class="sso-app-tile-icon" style="background-color: '.e($color).';">'.
+                        '<span>'.e(mb_strtoupper(mb_substr($name, 0, 1))).'</span></div>';
         }
-        return
-            '<a href="'.e($url).'" class="sso-app-tile" target="_blank" rel="noopener">'.
-                '<div class="sso-app-tile-icon" style="background-color: '.e($color).';">'.
-                    '<span>'.e(mb_strtoupper(mb_substr($name, 0, 1))).'</span>'.
-                '</div>'.
-                '<span class="sso-app-tile-name">'.e($name).'</span>'.
-            '</a>';
+        return '<a href="'.e($url).'" class="sso-app-tile" target="_blank" rel="noopener">'.
+                   $icon.'<span class="sso-app-tile-name">'.e($name).'</span>'.$tag.
+               '</a>';
     };
 @endphp
 
@@ -74,9 +71,15 @@
     .sso-app-tile-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:.4rem;color:#fff;overflow:hidden;}
     .sso-app-tile-icon--img{background:transparent;border-radius:0;}
     .sso-app-tile-icon--img img{width:100%;height:100%;object-fit:contain;}
+    .sso-app-tile-icon--iso img{width:70%;height:70%;object-fit:contain;}
     .sso-app-tile-icon span{font-size:20px;font-weight:600;}
     .sso-app-tile-name{font-size:11px;line-height:1.2;color:#495057;word-break:break-word;}
+    .sso-app-tile-tag{margin-top:.2rem;font-size:9px;line-height:1;padding:.15rem .4rem;border-radius:999px;background:rgba(116,120,141,.16);color:#74788d;font-weight:600;}
+    .sso-app-more{display:block;margin-top:.6rem;padding:.55rem .25rem 0;border-top:1px solid rgba(0,0,0,.06);text-align:center;font-size:12px;font-weight:600;color:inherit;text-decoration:none;}
+    .sso-app-more:hover{text-decoration:underline;color:inherit;}
     .sso-app-launcher-empty{padding:1.5rem .5rem;text-align:center;color:#9ea4ab;font-size:.85rem;}
+    html[data-tema="oscuro"] .sso-app-tile-tag{background:rgba(255,255,255,.1);color:#9aa5c0;}
+    html[data-tema="oscuro"] .sso-app-more{border-top-color:rgba(255,255,255,.08);}
 </style>
 @endonce
 
@@ -91,38 +94,17 @@
         @if($launcherTotal === 0)
             <div class="sso-app-launcher-empty">Sin aplicaciones disponibles</div>
         @else
-            @if(!empty($launcherWeb))
-                <div class="sso-app-section">
-                    <div class="sso-app-section-title">Aplicaciones Web</div>
-                    <div class="sso-app-grid">
-                        @foreach($launcherWeb as $launcherApp)
-                            {!! $renderTile($launcherApp) !!}
-                        @endforeach
-                    </div>
+            <div class="sso-app-section">
+                <div class="sso-app-section-title">Tus aplicaciones</div>
+                <div class="sso-app-grid">
+                    @foreach($launcherTiles as $launcherApp)
+                        {!! $renderTile($launcherApp) !!}
+                    @endforeach
                 </div>
-            @endif
-
-            @if(!empty($launcherInternas))
-                <div class="sso-app-section">
-                    <div class="sso-app-section-title">Aplicaciones Internas</div>
-                    <div class="sso-app-grid">
-                        @foreach($launcherInternas as $launcherApp)
-                            {!! $renderTile($launcherApp) !!}
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            @if(!empty($launcherMoviles))
-                <div class="sso-app-section">
-                    <div class="sso-app-section-title">Aplicaciones Moviles</div>
-                    <div class="sso-app-grid">
-                        @foreach($launcherMoviles as $launcherApp)
-                            {!! $renderTile($launcherApp) !!}
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+            </div>
+        @endif
+        @if($launcherHome !== '')
+            <a class="sso-app-more" href="{{ $launcherHome }}" target="_blank" rel="noopener">Ver todas las aplicaciones</a>
         @endif
     </div>
 </div>
