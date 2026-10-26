@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // APP_KEY rompemos el flujo. Se mantiene como plaintext (UUID opaco).
         $middleware->encryptCookies(except: [
             'hm_sso',
+            // hm_tema (auto|claro|oscuro) va en claro en .24hm.net: el layout la lee para emitir la hoja clara u oscura sin destello (L3 / R-03).
+            'hm_tema',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
