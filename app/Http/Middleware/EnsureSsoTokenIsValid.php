@@ -233,6 +233,7 @@ class EnsureSsoTokenIsValid
                 'login_url' => route('login'),
             ], 401);
         }
-        return redirect()->route('login');
+        // Solo GET llega aqui: guest() guarda la URL para volver a ella tras el login (como HMAnubis).
+        return redirect()->guest(route('login'));
     }
 }

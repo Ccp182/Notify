@@ -127,6 +127,9 @@ class SSOController extends Controller
 
         // Pais inyectado por HMSrvAuth via AppendCountryToOAuthRedirect.
         // CRITICO: este es el pais OAuth de routing, no se sobrescribe despues.
+        // Fijacion de sesion: id nuevo (conserva url.intended y el resto) antes de guardar la identidad.
+        $request->session()->regenerate();
+
         $country = strtoupper((string) $request->query('country', 'EC'));
         Session::put('Pais', $country);
 
@@ -231,7 +234,7 @@ class SSOController extends Controller
         }
 
         // Tras login exitoso siempre pasamos por la seleccion de app
-        return redirect()->route('select-app.show');
+        return redirect()->intended(route('select-app.show'));
     }
 
     /**
