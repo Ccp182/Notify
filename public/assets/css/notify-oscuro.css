@@ -118,3 +118,6 @@ html[data-tema="oscuro"] .sso-app-section-title{color:#9aa5c0;}
 html[data-tema="oscuro"] .sso-app-tile-name{color:#c4cbe0;}
 html[data-tema="oscuro"] .dropdown-menu .dropdown-item.text-danger,html[data-tema="oscuro"] .dropdown-menu .text-danger{color:#ff8da1 !important;}
 html[data-tema="oscuro"] .sso-account-dropdown .btn-outline-secondary{color:#c4cbe0;border-color:#4a5470;}
+
+/* Menú de cuenta: el componente trae un degradado blanco fijo en la cabecera; en oscuro "¡Hola, …!" no se leía (igual que GF y Anubis) */
+html[data-tema="oscuro"] .sso-account-header { background: transparent; border-bottom-color: rgba(255,255,255,.08); }
