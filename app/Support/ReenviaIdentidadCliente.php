@@ -40,7 +40,7 @@ trait ReenviaIdentidadCliente
 
         $cabeceras = [];
 
-        $ip = $peticion->ip();
+        $ip = \App\Support\IpCliente::de($peticion);   // 2026-11-16: detras de Imperva, ->ip() es el nodo
         if ($ip !== null && $ip !== '') {
             $cabeceras['X-HM-Client-Ip'] = $ip;
         }
